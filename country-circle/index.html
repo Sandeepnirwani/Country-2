@@ -1,110 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>100 COUNTRY PRO LOOP</title>
-<style>
-:root { --neon:#00f2ff; --gold:#ffcc00; }
-body {
-  margin:0; background:#020205; overflow:hidden;
-  display:flex; justify-content:center; align-items:center;
-  font-family:Segoe UI, sans-serif;
-}
-#stream {
-  width:100vw; height:177.77vw;
-  max-width:56.25vh; max-height:100vh;
-  position:relative; background:black;
-}
-canvas { width:100%; height:100%; display:block; }
-#winner {
-  position:absolute; inset:0;
-  display:none; align-items:center; justify-content:center;
-  flex-direction:column;
-  background:rgba(0,0,0,.9); z-index:20;
-}
-#winner img {
-  width:220px; height:220px;
-  border-radius:50%; border:8px solid white;
-}
-#winner h1 { color:var(--gold); font-size: 3rem; }
-.live {
-  position:absolute; top:20px; left:20px;
-  background:red; padding:8px 14px;
-  font-weight:900; color:white; border-radius: 4px;
-}
-#startOverlay {
-  position: absolute; inset: 0; background: rgba(0,0,0,0.8);
-  z-index: 100; display: flex; justify-content: center; align-items: center;
-}
-#startBtn {
-  padding: 20px 40px; font-size: 24px; background: #28a745;
-  color: white; border: none; border-radius: 50px; font-weight: bold;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COUNTRY SPEED BATTLE PRO</title>
+    <style>
+        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
+        body {
+            margin:0; background:#050508; overflow:hidden;
+            display:flex; justify-content:center; align-items:center;
+            font-family:'Arial Black', sans-serif; height: 100vh;
+        }
+        #stream {
+            width:100vw; height:177.77vw;
+            max-width:56.25vh; max-height:100vh;
+            position:relative; background:#000;
+        }
+        canvas { width:100%; height:100%; display:block; }
+        
+        .live {
+            position:absolute; top:30px; left:30px;
+            background:var(--red); padding:6px 15px;
+            font-weight:900; color:white; border-radius: 4px; z-index: 10;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-/* Scorecard (top-right) */
-#scorecard { position:absolute; top:18px; right:18px; background:rgba(0,0,0,0.5); color:white; padding:10px 14px; border-radius:8px; font-weight:700; text-align:center; z-index:15; }
-#scorecard div { margin:6px 0; }
-#scorecard .val { font-size:18px; color:var(--neon); }
+        #scorecard { 
+            position:absolute; top:25px; right:25px; 
+            background:rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            color:white; padding:12px; border-radius:12px; z-index:15; 
+            border: 2px solid var(--neon); text-align: right;
+        }
+        .val { font-size:22px; color:var(--neon); text-shadow: 0 0 10px var(--neon); }
 
-/* Commentary (dynamic) and static comment line */
-#commentary { position:absolute; left:50%; transform:translateX(-50%); bottom:120px; color:white; font-size:18px; background:rgba(0,0,0,0.45); padding:8px 14px; border-radius:20px; z-index:15; opacity:0; transition:opacity .25s; }
-#commentLine { position:absolute; left:50%; transform:translateX(-50%); bottom:72px; color:#fff; font-size:16px; background:rgba(255,255,255,0.03); padding:6px 12px; border-radius:20px; z-index:15; font-weight:700; letter-spacing:0.5px; }
+        #cta {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            bottom: 110px; width: 90%; text-align: center;
+            color: white; font-size: 20px; font-weight: 900;
+            text-transform: uppercase; text-shadow: 2px 2px 5px #000; z-index: 10;
+        }
 
-/* Ticker at the bottom */
-#ticker { position:absolute; left:0; right:0; bottom:0; height:56px; background:rgba(0,0,0,0.6); display:flex; align-items:center; overflow:hidden; z-index:14; }
-#tickerInner { display:flex; align-items:center; gap:24px; padding-left:24px; will-change:transform; }
-.tick { display:flex; gap:8px; align-items:center; color:#fff; font-weight:700; }
-.tick img { width:36px; height:24px; object-fit:cover; border-radius:4px; }
+        #commentary { 
+            position:absolute; left:50%; transform:translateX(-50%); 
+            top: 45%; width: 85%; text-align: center;
+            color: #fff; font-size:32px; font-weight: 900;
+            z-index:20; opacity:0; transition: 0.3s;
+            text-shadow: 0 0 20px #00f2ff, 0 0 40px #000;
+            pointer-events: none;
+        }
 
-</style>
+        #ticker { 
+            position:absolute; bottom:0; width:100%; height:60px; 
+            background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
+        }
+        #tickerInner { display:flex; gap:60px; white-space:nowrap; animation: scrollTicker 35s linear infinite; }
+        @keyframes scrollTicker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; }
+        .tick img { width:40px; height:28px; border-radius:4px; }
+
+        #startOverlay {
+            position: absolute; inset: 0; background: #000;
+            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #startBtn {
+            padding: 25px 60px; font-size: 28px; background: var(--neon);
+            color: black; border: none; border-radius: 50px; font-weight: 900; cursor: pointer;
+            box-shadow: 0 0 20px var(--neon);
+        }
+
+        #winner {
+            position:absolute; inset:0; display:none; 
+            align-items:center; justify-content:center; flex-direction:column;
+            background:rgba(0,0,0,0.98); z-index:30;
+        }
+        #winner img { width:250px; height:250px; border-radius:50%; border:10px solid var(--gold); }
+        #winner h1 { color:var(--gold); font-size: 4rem; margin-top:20px; text-align:center; }
+    </style>
 </head>
 <body>
 
-<div id="startOverlay">
-    <button id="startBtn">TAP TO START STREAM</button>
-</div>
+<div id="startOverlay"><button id="startBtn">START STREAM</button></div>
 
 <div id="stream">
-  <div class="live">LIVE</div>
-  <div id="scorecard">
-    <div><div style="font-size:10px; opacity:.8">REMAINING</div><div id="remaining" class="val">100</div></div>
-    <div><div style="font-size:10px; opacity:.8">ELIMINATED</div><div id="eliminated" class="val">0</div></div>
-    <div><div style="font-size:10px; opacity:.8">TIME</div><div id="elapsed" class="val">00:00</div></div>
-  </div>
-  <canvas id="c" width="1080" height="1920"></canvas>
-  <div id="commentary"></div>
-  <div id="commentLine">Comment your country's name to win</div>
-  <div id="ticker"><div id="tickerInner"></div></div>
-  <div id="winner">
-    <img id="winnerImg">
-    <h1 id="winnerName"></h1>
-  </div>
+    <div class="live">LIVE</div>
+    <div id="scorecard">
+        <div style="font-size:12px">REMAINING</div><div id="remaining" class="val">100</div>
+    </div>
+    
+    <div id="commentary"></div>
+    <div id="cta">Comment your country name to win!</div>
+    
+    <canvas id="c" width="1080" height="1920"></canvas>
+    <div id="ticker"><div id="tickerInner"></div></div>
+    
+    <div id="winner">
+        <h2 style="color:white; font-size: 1.5rem;">GLOBAL CHAMPION!</h2>
+        <img id="winnerImg" src="">
+        <h1 id="winnerName"></h1>
+    </div>
 </div>
 
 <script>
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
-const CENTER = { x:540, y:960 };
-const RADIUS = 500;
-const BALL_R = 25; // Slightly larger for mobile visibility
-const TOTAL = 100;
+const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
 
-let balls = [];
-let running = false;
-let slowMo = 1;
-let announced3 = false;
-let startTime = 0;
-let audioCtx;
+let balls = [], particles = [], exited = [];
+let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
 
-const arena = { gapStart:-0.25, gapEnd:0.25 };
+// --- DYNAMIC BACKGROUND MUSIC ---
+function startBGM() {
+    const playBeat = () => {
+        if (!running) return;
+        
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(45, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) {}
 
+        // Tempo increases as balls decrease
+        let tempo = balls.length > 20 ? 600 : 400;
+        if(balls.length <= 5) tempo = 300;
+        
+        setTimeout(playBeat, tempo);
+    };
+    playBeat();
+}
+
+// --- ORIGINAL SOUNDS ---
 function bloop() {
   if(!audioCtx) return;
   const o=audioCtx.createOscillator(), g=audioCtx.createGain();
   o.frequency.value=500;
   o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.08);
-  g.gain.value=.1;
+  g.gain.value=.08;
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
   o.connect(g).connect(audioCtx.destination);
   o.start(); o.stop(audioCtx.currentTime+.1);
@@ -121,245 +160,144 @@ function elimSound() {
   o.start(); o.stop(audioCtx.currentTime+.3);
 }
 
-let announcerVoice = null;
-function chooseAnnouncerVoice(){
-  const vs = speechSynthesis.getVoices();
-  announcerVoice = vs.find(v=>/en-(US|GB)/.test(v.lang) && /Google|Alex|Samantha|Joanna|Matthew|Daniel/i.test(v.name)) || vs.find(v=>/en-/.test(v.lang)) || vs[0];
-}
-if(typeof speechSynthesis !== 'undefined'){
-  if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged = chooseAnnouncerVoice;
-  chooseAnnouncerVoice();
-}
-
-function say(t){
-  if(!running && !t.toLowerCase().includes("winner")) return;
-  if(typeof speechSynthesis !== 'undefined'){
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    if(announcerVoice) u.voice = announcerVoice;
-    u.pitch = 0.9; u.rate = 1.05; u.volume = 1.0;
-    speechSynthesis.speak(u);
-  }
-  const comEl = document.getElementById('commentary');
-  if(comEl){ comEl.textContent = t; comEl.style.opacity = 1; setTimeout(()=>{ comEl.style.opacity = 0; }, 3500); }
-}
-
-const countries = [
-  {code: 'us', name: 'United States'},
-  {code: 'in', name: 'India'},
-  {code: 'br', name: 'Brazil'},
-  {code: 'gb', name: 'United Kingdom'},
-  {code: 'fr', name: 'France'},
-  {code: 'de', name: 'Germany'},
-  {code: 'jp', name: 'Japan'},
-  {code: 'cn', name: 'China'},
-  {code: 'ru', name: 'Russia'},
-  {code: 'it', name: 'Italy'},
-  {code: 'es', name: 'Spain'},
-  {code: 'mx', name: 'Mexico'},
-  {code: 'kr', name: 'South Korea'},
-  {code: 'ca', name: 'Canada'},
-  {code: 'au', name: 'Australia'}
+// --- COMMENTARY ---
+const fillerLines = [
+    "Unbelievable physics on display!",
+    "Look at the speed of these countries!",
+    "Who is your favorite? Comment now!",
+    "The circle is spinning faster!",
+    "Massive collision in the center!",
+    "Pure chaos in the arena!",
+    "Will your country survive?",
+    "India is holding strong!",
+    "Look at that bounce!"
 ];
-const flags = [];
-for (let i = 0; i < countries.length; i++) {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = `https://flagcdn.com/w160/${countries[i].code}.png`;
-  flags.push({ name: countries[i].name, img });
+
+function say(t, important = false) {
+    const comEl = document.getElementById('commentary');
+    comEl.textContent = t; comEl.style.opacity = 1;
+    setTimeout(() => { if(comEl.textContent === t) comEl.style.opacity = 0; }, important ? 4000 : 2000);
+    const u = new SpeechSynthesisUtterance(t);
+    u.rate = 1.15; u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
 }
 
-// Exited list for ticker and scoring
-let exited = [];
-let tickerOffset = 0, tickerSpeed = 0.6;
-function handleExit(ball){
-  exited.unshift({name:ball.item.name, img: ball.item.img.src, time: Date.now()});
-  if(exited.length>50) exited.pop();
-  updateTicker();
-  updateScorecard();
-  say(`${ball.item.name} has been eliminated`);
-}
-function updateTicker(){
-  const inner = document.getElementById('tickerInner');
-  if(!inner) return;
-  inner.innerHTML = exited.map(e=>`<div class="tick"><img src="${e.img}" /><span>${e.name}</span></div>`).join('   ');
-  tickerOffset = 0;
-}
-function updateScorecard(){
-  const rem = document.getElementById('remaining');
-  const elim = document.getElementById('eliminated');
-  const elapsed = document.getElementById('elapsed');
-  if(rem) rem.textContent = balls.filter(b=>!b.out).length;
-  if(elim) elim.textContent = exited.length;
-  if(elapsed && startTime) {
-    const s = Math.floor((performance.now()-startTime)/1000);
-    elapsed.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-  }
+function randomCommentary() {
+    if (!running || balls.length <= 3) return;
+    say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
+    setTimeout(randomCommentary, 12000 + Math.random() * 8000);
 }
 
+// --- DATA ---
+const countries = [
+    {c:'us', n:'USA'}, {c:'in', n:'INDIA'}, {c:'br', n:'BRAZIL'}, {c:'gb', n:'UK'},
+    {c:'fr', n:'FRANCE'}, {c:'de', n:'GERMANY'}, {c:'jp', n:'JAPAN'}, {c:'cn', n:'CHINA'},
+    {c:'ru', n:'RUSSIA'}, {c:'it', n:'ITALY'}, {c:'es', n:'SPAIN'}, {c:'mx', n:'MEXICO'},
+    {c:'ca', n:'CANADA'}, {c:'au', n:'AUSTRALIA'}, {c:'kr', n:'KOREA'}, {c:'id', n:'INDONESIA'}
+];
+
+const flags = countries.map(x => {
+    const img = new Image(); img.crossOrigin = "anonymous";
+    img.src = `https://flagcdn.com/w160/${x.c}.png`;
+    return { name: x.n, img };
+});
+
+const tickerInner = document.getElementById('tickerInner');
+flags.forEach(f => {
+    tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
+});
 
 class Ball {
-  constructor(item){
-    const a=Math.random() * Math.PI * 2;
-    const r=Math.random() * (RADIUS-60);
-    this.x=CENTER.x+Math.cos(a)*r;
-    this.y=CENTER.y+Math.sin(a)*r;
-    this.vx=(Math.random()-.5)*12;
-    this.vy=(Math.random()-.5)*12;
-    this.r=BALL_R;
-    this.item=item;
-    this.out=false;
-  }
-
-  update(){
-    const dx=this.x-CENTER.x;
-    const dy=this.y-CENTER.y;
-    const d=Math.hypot(dx,dy)||1;
-    this.vx+=(-dy/d)*0.05;
-    this.vy+=( dx/d)*0.05;
-    this.x+=this.vx*slowMo;
-    this.y+=this.vy*slowMo;
-
-    if(d>RADIUS-this.r){
-      const ang=Math.atan2(dy,dx);
-      if(ang>arena.gapStart && ang<arena.gapEnd){
-        if(this.protectedUntil && this.protectedUntil > performance.now()){
-          // bounce while protected
-          const nx=dx/d, ny=dy/d;
-          const dot = (this.vx * nx) + (this.vy * ny);
-          this.vx -= 2 * dot * nx;
-          this.vy -= 2 * dot * ny;
-          this.x=CENTER.x+nx*(RADIUS-this.r-1);
-          this.y=CENTER.y+ny*(RADIUS-this.r-1);
-          bloop();
-        } else {
-          this.out=true;
-          elimSound();
-          try{ handleExit(this); }catch(e){}
+    constructor(item) {
+        const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
+        this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
+        this.vx = (Math.random()-0.5)*28; this.vy = (Math.random()-0.5)*28;
+        this.item = item; this.out = false;
+    }
+    update() {
+        this.x += this.vx * slowMo; this.y += this.vy * slowMo;
+        const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
+        if (d > RADIUS - BALL_R) {
+            let ang = Math.atan2(dy, dx) - arenaRotation;
+            while(ang < -Math.PI) ang += Math.PI*2;
+            while(ang > Math.PI) ang -= Math.PI*2;
+            if (ang > -0.28 && ang < 0.28) {
+                this.out = true;
+                for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
+                elimSound();
+                if(balls.length <= 4) say(this.item.name + " ELIMINATED!", true);
+            } else {
+                const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
+                this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
+                this.x = CENTER.x + nx*(RADIUS-BALL_R-2); this.y = CENTER.y + ny*(RADIUS-BALL_R-2);
+                bloop();
+            }
         }
-      } else {
-        const nx=dx/d, ny=dy/d;
-        const dot = (this.vx * nx) + (this.vy * ny);
-        this.vx -= 2 * dot * nx;
-        this.vy -= 2 * dot * ny;
-        this.x=CENTER.x+nx*(RADIUS-this.r-1);
-        this.y=CENTER.y+ny*(RADIUS-this.r-1);
-        bloop();
-      }
     }
-  }
+    draw() {
+        ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, BALL_R, 0, Math.PI*2); ctx.clip();
+        if(this.item.img.complete) ctx.drawImage(this.item.img, this.x-BALL_R, this.y-BALL_R, BALL_R*2, BALL_R*2);
+        ctx.restore();
+    }
+}
 
-  draw(){
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-    ctx.clip();
-    if(this.item.img.complete) {
-        ctx.drawImage(this.item.img,this.x-this.radius||this.x-this.r,this.y-this.r,this.r*2,this.r*2);
-    } else {
-        ctx.fillStyle="white"; ctx.fill();
+function start() {
+    balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
+    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i % flags.length]));
+    say("THE RACE BEGINS!", true);
+    setTimeout(randomCommentary, 6000);
+    startBGM();
+}
+
+function loop() {
+    ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 1080, 1920);
+    if (running) {
+        arenaRotation += 0.025;
+        balls.forEach(b => b.update());
+        balls = balls.filter(b => !b.out);
+        if (balls.length === 3 && !announced3) { announced3 = true; slowMo = 0.4; say("FINAL THREE COUNTRIES!", true); }
+        if (balls.length === 1) {
+            running = false;
+            const w = balls[0].item;
+            document.getElementById("winnerImg").src = w.img.src;
+            document.getElementById("winnerName").textContent = w.name;
+            document.getElementById("winner").style.display = "flex";
+            say("CONGRATULATIONS TO " + w.name + "!", true);
+            setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 7000);
+        }
     }
+    
+    // Arena Ring - FIXED DRAWING
+    ctx.save(); 
+    ctx.translate(CENTER.x, CENTER.y); 
+    ctx.rotate(arenaRotation);
+    ctx.strokeStyle = "#00f2ff"; 
+    ctx.lineWidth = 25; 
+    ctx.shadowBlur = 20; 
+    ctx.shadowColor = "#00f2ff";
+    ctx.beginPath(); 
+    ctx.arc(0, 0, RADIUS, 0.28, -0.28); 
+    ctx.stroke(); 
     ctx.restore();
-  }
-}
-
-function collide(){
-  for(let i=0;i<balls.length;i++){
-    for(let j=i+1;j<balls.length;j++){
-      const a=balls[i], b=balls[j];
-      const dx=b.x-a.x, dy=b.y-a.y;
-      const d=Math.hypot(dx,dy);
-      const min=a.r+b.r;
-      if(d<min && d>0){
-        const nx=dx/d, ny=dy/d;
-        const overlap=min-d;
-        a.x-=nx*overlap*0.5; a.y-=ny*overlap*0.5;
-        b.x+=nx*overlap*0.5; b.y+=ny*overlap*0.5;
-        const dvx=b.vx-a.vx, dvy=b.vy-a.vy;
-        const impact = (dvx*nx) + (dvy*ny);
-        if(impact>0)continue;
-        a.vx+=impact*nx; a.vy+=impact*ny;
-        b.vx-=impact*nx; b.vy-=impact*ny;
-        bloop();
-      }
-    }
-  }
-}
-
-function start(){
-  balls=[];
-  exited = [];
-  updateTicker();
-  updateScorecard();
-  announced3=false;
-  slowMo=1;
-  arena.gapStart=-0.25;
-  arena.gapEnd=0.25;
-  startTime=performance.now();
-  running=true;
-  for(let i=0;i<TOTAL;i++) balls.push(new Ball(flags[i%flags.length]));
-  say("And they're off! The race begins!");
-}
-
-
-
-function win(ball){
-  running=false;
-  document.getElementById("winnerImg").src=ball.item.img.src;
-  document.getElementById("winnerName").textContent=ball.item.name+" WINS";
-  document.getElementById("winner").style.display="flex";
-  say(`And the winner is... ${ball.item.name}! What a performance!`);
-  updateScorecard();
-  setTimeout(()=>{
-    document.getElementById("winner").style.display="none";
-    start();
-  },5000);
-}
-
-function loop(t){
-  ctx.clearRect(0,0,1080,1920);
-  if(running){
-    if(t-startTime>15000){
-      arena.gapStart-=0.0015;
-      arena.gapEnd+=0.0015;
-    }
-    balls.forEach(b=>b.update());
-    collide();
-    balls=balls.filter(b=>!b.out);
-    if(balls.length===3 && !announced3){
-      announced3=true;
-      slowMo=0.4;
-      say("Only three remain");
-    }
-    if(balls.length===1) win(balls[0]);
-  }
-  
-  ctx.strokeStyle="#00f2ff";
-  ctx.lineWidth=20;
-  ctx.beginPath();
-  ctx.arc(CENTER.x,CENTER.y,RADIUS,arena.gapEnd,arena.gapStart);
-  ctx.stroke();
-  
-  balls.forEach(b=>b.draw());
-
-  // ticker scrolling
-  const tickerInner = document.getElementById('tickerInner');
-  if(tickerInner && tickerInner.scrollWidth > 0){
-    tickerOffset += tickerSpeed;
-    tickerInner.style.transform = `translateX(${-tickerOffset}px)`;
-    if(tickerOffset > tickerInner.scrollWidth/2) tickerOffset = 0;
-  }
-  updateScorecard();
-
-  requestAnimationFrame(loop);
+    
+    balls.forEach(b => b.draw());
+    particles.forEach((p, i) => {
+        p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
+        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
+        if(p.l<=0) particles.splice(i,1);
+    });
+    ctx.globalAlpha=1;
+    document.getElementById('remaining').textContent = balls.length;
+    requestAnimationFrame(loop);
 }
 
 document.getElementById("startBtn").onclick = () => {
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    document.getElementById("startOverlay").style.display = "none";
-    start();
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById("startOverlay").style.display = "none";
+        start();
+    } catch(e) { console.log(e); }
 };
-
 requestAnimationFrame(loop);
 </script>
 </body>
