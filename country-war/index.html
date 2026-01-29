@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>ULTRA-WAR: OMEGA NEON</title>
+<style>
+  :root { --neon: #00f2ff; --bg: #010105; --p1: #00ff88; --p2: #ff0055; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; display:flex; align-items:center; justify-content:center; -webkit-font-smoothing:antialiased; }
+
+  /* Viewport enforces 9:16 portrait aspect ratio and centers the game */
+  #viewport { position: relative; aspect-ratio: 9/16; width: min(100vw, calc(100vh * 9 / 16)); max-width: 480px; height: auto; border: 2px solid rgba(0,242,255,0.06); box-sizing: border-box; overflow: hidden; background: radial-gradient(circle, #050515, #000); }
+
+  canvas { display: block; width: 100%; height: 100%; filter: contrast(1.2) brightness(1.1); background: transparent; }
+  #ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; box-sizing: border-box; }
+  #hud { position: absolute; top: 14px; left: 14px; pointer-events: auto; }
+  .stat { font-size: 10px; color: var(--neon); letter-spacing: 1.5px; margin-bottom: 5px; opacity: 0.9; }
+  .val { font-size: 18px; font-weight: 900; text-shadow: 0 0 10px var(--neon); }
+
+  /* Start screen sits inside viewport */
+  #start-screen { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:100; text-align:center; background: rgba(1,1,1,0.6); }
+  h1 { font-size: 28px; letter-spacing: 8px; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
+  button { padding: 14px 36px; font-size: 16px; background: transparent; border: 2px solid var(--neon); color: var(--neon); cursor: pointer; border-radius: 6px; transition: 0.18s; font-family: inherit; margin-top: 20px; pointer-events: auto; }
+  button:hover { background: var(--neon); color: black; box-shadow: 0 0 30px var(--neon); }
+
+  #xp-container { position:absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: 66%; max-width: 320px; text-align: center; }
+  #xp-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+  #xp-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p1), var(--p2)); box-shadow: 0 0 10px var(--p1); transition: width 0.3s; }
+
+  /* Landscape devices: keep 9:16 viewport and letterbox */
+  @media (min-aspect-ratio: 9/16) {
+     #viewport { height: 100vh; width: calc(100vh * 9 / 16); }
+  }
+
+  @media (max-width: 360px) {
+     h1 { font-size: 22px; letter-spacing: 6px; }
+     .val { font-size: 16px; }
+     button { padding: 12px 24px; }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="viewport">
+  <div id="start-screen">
+      <h1>OMEGA NEON</h1>
+      <p style="color: #555;">ZERO-PLAYER AUTO-PILOT SYSTEM</p>
+      <button id="launchBtn">INITIALIZE & AUDIO ON</button>
+  </div>
+
+  <div id="ui-layer">
+      <div id="hud">
+          <div class="stat">DESTRUCTION_COUNT</div>
+          <div id="kills" class="val">0</div>
+          <div class="stat" style="margin-top:20px">WEAPON_CLASS</div>
+          <div id="tierName" class="val" style="color:var(--p2); text-shadow: 0 0 15px var(--p2);">GATLING</div>
+      </div>
+      <div id="xp-container">
+          <div id="rankText" style="font-size: 14px; margin-bottom: 8px; letter-spacing: 3px;">RANK: ROOKIE</div>
+          <div id="xp-bar"><div id="xp-fill"></div></div>
+      </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+/**
+ * OMEGA NEON - PRO AUTO-BATTLER
+ * Features: Procedural SFX, Floating Text, Evolution AI
+ */
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const killsEl = document.getElementById('kills');
+const tierEl = document.getElementById('tierName');
+const xpFill = document.getElementById('xp-fill');
+const rankEl = document.getElementById('rankText');
+
+let W, H, shake = 0, kills = 0, weaponTier = 0, gameActive = false;
+
+/* --- AUDIO ENGINE (Synthesizer) --- */
+let audioCtx;
+const playSound = (freq, type, dur, vol, slide = 0) => {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if(slide) osc.frequency.exponentialRampToValueAtTime(slide, audioCtx.currentTime + dur);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+};
+
+/* --- CONFIG --- */
+const TIERS = [
+    { name: "PULSE-GATLING", color: "#00ff88", count: 2, speed: 18, size: 4, cool: 120, snd: 600 },
+    { name: "HEAVY BLASTER", color: "#00d4ff", count: 1, speed: 12, size: 14, cool: 250, snd: 200 },
+    { name: "PLASMA SPREAD", color: "#ffea00", count: 5, speed: 15, size: 6, cool: 180, snd: 400 },
+    { name: "OMEGA BEAM", color: "#ff0055", count: 1, speed: 30, size: 25, cool: 80, snd: 800 }
+];
+
+let player = { x: 0, y: 0, tx: 0, ty: 0, lastFire: 0 };
+let bullets = [], enemies = [], particles = [], texts = [];
+
+const viewport = document.getElementById('viewport');
+const DPR = Math.max(1, window.devicePixelRatio || 1);
+const resize = () => {
+    const cw = Math.max(200, viewport.clientWidth);
+    const ch = Math.max(200, viewport.clientHeight);
+    W = Math.floor(cw);
+    H = Math.floor(ch);
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // draw in CSS pixels
+    // Reposition player for the new viewport size
+    player.x = W / 2;
+    player.y = H - Math.min(90, H * 0.12);
+    player.tx = player.x; player.ty = player.y;
+};
+window.addEventListener('resize', resize);
+resize();
+
+/* --- LOGIC --- */
+function spawnEnemy() {
+    if (enemies.length > 50) return;
+    enemies.push({
+        x: Math.random() * W, y: -50,
+        hp: 1 + Math.floor(kills/25), maxHp: 1 + Math.floor(kills/25),
+        size: 30 + Math.random() * 30,
+        speed: 1.5 + Math.random() * 3 + (kills/500),
+        flash: 0, emoji: ['👾','👽','🛸','🤖'][Math.floor(Math.random()*4)]
+    });
+}
+
+function spawnText(x, y, txt, color) {
+    texts.push({ x, y, txt, color, life: 1, vy: -2 });
+}
+
+function update() {
+    if(!gameActive) return;
+
+    // AI PILOT
+    let target = null, minDist = 2000;
+    enemies.forEach(e => {
+        let d = Math.hypot(e.x - player.x, e.y - player.y);
+        if(d < minDist) { minDist = d; target = e; }
+    });
+
+    if(target) {
+        player.tx = target.x;
+        player.ty = H - 150;
+        const t = TIERS[weaponTier];
+        if(performance.now() - player.lastFire > t.cool) {
+            for(let i=0; i<t.count; i++) {
+                bullets.push({ 
+                    x: player.x + (i-(t.count-1)/2)*25, 
+                    y: player.y - 20, 
+                    s: t.size, spd: t.spd, c: t.color, 
+                    type: weaponTier === 1 ? 'heavy' : 'bolt' 
+                });
+            }
+            player.lastFire = performance.now();
+            playSound(t.snd, weaponTier === 1 ? 'square' : 'sine', 0.1, 0.05, 50);
+            shake = weaponTier + 2;
+        }
+    } else { player.tx = W/2 + Math.sin(Date.now()*0.002)*150; }
+
+    player.x += (player.tx - player.x) * 0.12;
+    player.y += (player.ty - player.y) * 0.12;
+
+    if(Math.random() < 0.08) spawnEnemy();
+
+    // BULLETS
+    bullets.forEach(b => {
+        b.y -= 15;
+        enemies.forEach(e => {
+            if(Math.hypot(b.x - e.x, b.y - e.y) < e.size/2 + b.s) {
+                b.dead = true;
+                e.hp--; e.flash = 5;
+                spawnText(e.x, e.y, "-1", "#fff");
+                playSound(150, 'triangle', 0.05, 0.02);
+                if(e.hp <= 0) {
+                    e.dead = true; kills++;
+                    shake = 10;
+                    playSound(60, 'square', 0.3, 0.1, 10);
+                    for(let i=0; i<15; i++) particles.push({x:e.x, y:e.y, vx:Math.random()*6-3, vy:Math.random()*6-3, l:1, c:TIERS[weaponTier].color});
+                }
+            }
+        });
+    });
+
+    // PROGRESSION
+    const oldTier = weaponTier;
+    weaponTier = Math.min(3, Math.floor(kills / 40));
+    if(weaponTier !== oldTier) {
+        tierEl.innerText = TIERS[weaponTier].name;
+        rankEl.innerText = `RANK: ${["ROOKIE","ELITE","ACE","GOD-MODE"][weaponTier]}`;
+        playSound(880, 'sine', 0.5, 0.1, 1200);
+    }
+
+    bullets = bullets.filter(b => !b.dead && b.y > -50);
+    enemies = enemies.filter(e => {
+        e.y += e.speed;
+        if(e.flash > 0) e.flash--;
+        return !e.dead && e.y < H + 50;
+    });
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.l -= 0.02; });
+    particles = particles.filter(p => p.l > 0);
+    texts.forEach(t => { t.y += t.vy; t.life -= 0.02; });
+    texts = texts.filter(t => t.life > 0);
+    
+    xpFill.style.width = `${(kills % 40) * 2.5}%`;
+    killsEl.innerText = kills;
+}
+
+function draw() {
+    ctx.fillStyle = '#010105';
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    if(shake > 0) { ctx.translate(Math.random()*shake-shake/2, Math.random()*shake-shake/2); shake *= 0.9; }
+
+    // STARFIELD
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    for(let i=0; i<30; i++) ctx.fillRect((i*133)%W, (Date.now()*0.1 + i*55)%H, 2, 2);
+
+    // BULLETS
+    bullets.forEach(b => {
+        ctx.shadowBlur = 15; ctx.shadowColor = b.c;
+        ctx.fillStyle = b.c;
+        if(b.type === 'heavy') { ctx.beginPath(); ctx.arc(b.x, b.y, b.s, 0, 7); ctx.fill(); }
+        else ctx.fillRect(b.x-2, b.y, 4, 20);
+    });
+    ctx.shadowBlur = 0;
+
+    // ENEMIES
+    ctx.textAlign = "center";
+    enemies.forEach(e => {
+        if(e.flash > 0) ctx.filter = "brightness(10) white-balance(100)";
+        ctx.font = `${e.size}px serif`;
+        ctx.fillText(e.emoji, e.x, e.y);
+        ctx.filter = "none";
+    });
+
+    // PARTICLES
+    particles.forEach(p => {
+        ctx.globalAlpha = p.l;
+        ctx.fillStyle = p.c;
+        ctx.fillRect(p.x, p.y, 3, 3);
+    });
+
+    // DAMAGE NUMBERS
+    texts.forEach(t => {
+        ctx.globalAlpha = t.life;
+        ctx.fillStyle = t.color;
+        ctx.font = "bold 16px Orbitron";
+        ctx.fillText(t.txt, t.x, t.y);
+    });
+    ctx.globalAlpha = 1.0;
+
+    // PLAYER
+    ctx.shadowBlur = 20; ctx.shadowColor = TIERS[weaponTier].color;
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y-30);
+    ctx.lineTo(player.x+20, player.y+10);
+    ctx.lineTo(player.x-20, player.y+10);
+    ctx.fill();
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+}
+
+document.getElementById('launchBtn').onclick = () => {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('start-screen').style.display = 'none';
+    gameActive = true;
+    // Ambient engine drone
+    const lfo = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    lfo.type = 'sawtooth'; lfo.frequency.value = 40;
+    g.gain.value = 0.02; lfo.connect(g); g.connect(audioCtx.destination);
+    lfo.start();
+};
+
+setInterval(update, 1000/60);
+draw();
+
+</script>
+</body>
+</html>
