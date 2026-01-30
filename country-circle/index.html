@@ -298,6 +298,56 @@ document.getElementById("startBtn").onclick = () => {
         start();
     } catch(e) { console.log(e); }
 };
+
+// Enhanced auto-start: try muted <audio> autoplay to prime media, connect it to AudioContext if possible,
+// and attach a one-time user-gesture resume if autoplay is blocked.
+(async function tryAutoStart(){
+    try {
+        // Create short muted audio and try to play it (muted autoplay usually allowed)
+        let mutedAudio = document.createElement('audio');
+        mutedAudio.muted = true; mutedAudio.autoplay = true; mutedAudio.playsInline = true;
+        // a tiny silent WAV (very short) to avoid external network requests
+        mutedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
+        document.body.appendChild(mutedAudio);
+        try { await mutedAudio.play(); } catch(e) { /* muted autoplay may still be blocked */ }
+
+        // Try to create and resume audio context
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            const srcNode = audioCtx.createMediaElementSource(mutedAudio);
+            const g = audioCtx.createGain(); g.gain.value = 0;
+            srcNode.connect(g).connect(audioCtx.destination);
+        } catch(e) { /* ignore if creation fails due to cross-origin */ }
+
+        if (audioCtx.state === 'suspended') {
+            try { await audioCtx.resume(); } catch(e) {}
+        }
+
+        if (audioCtx.state === 'running') {
+            document.getElementById("startOverlay").style.display = "none";
+            start();
+        } else {
+            // Autoplay blocked — show overlay and attach a one-time click handler to resume
+            console.log('Autoplay blocked; waiting for user gesture to start.');
+            const overlay = document.getElementById("startOverlay");
+            overlay.style.display = "flex";
+            overlay.querySelector('#startBtn').textContent = 'Tap to START';
+            const resumeHandler = async () => {
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    try { await audioCtx.resume(); } catch(e) {}
+                    document.getElementById("startOverlay").style.display = "none";
+                    start();
+                } catch(e) { console.log(e); }
+                document.body.removeEventListener('click', resumeHandler);
+            };
+            document.body.addEventListener('click', resumeHandler);
+        }
+    } catch(e) {
+        audioCtx = null;
+    }
+})();
+
 requestAnimationFrame(loop);
 </script>
 </body>
