@@ -333,6 +333,8 @@ function loop() {
     ctx.restore();
     
     balls.forEach(b => b.draw());
+    // Clean up old particles to prevent memory buildup
+    if(particles.length > 500) particles = particles.slice(-250); // keep only recent ones
     particles.forEach((p, i) => {
         p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
         ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
@@ -340,6 +342,10 @@ function loop() {
     });
     ctx.globalAlpha=1;
     document.getElementById('remaining').textContent = balls.length;
+    // Periodic cleanup to prevent memory leaks on long streams
+    if(Math.random() < 0.01) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
     requestAnimationFrame(loop);
 }
 
