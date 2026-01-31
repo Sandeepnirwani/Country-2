@@ -105,9 +105,12 @@
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
+const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
 
 let balls = [], particles = [], exited = [];
 let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
+let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s)
+let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
 
 // --- DYNAMIC BACKGROUND MUSIC ---
 function startBGM() {
@@ -190,15 +193,33 @@ function randomCommentary() {
 
 // --- DATA ---
 const countries = [
-    {c:'us', n:'USA'}, {c:'in', n:'INDIA'}, {c:'br', n:'BRAZIL'}, {c:'gb', n:'UK'},
-    {c:'fr', n:'FRANCE'}, {c:'de', n:'GERMANY'}, {c:'jp', n:'JAPAN'}, {c:'cn', n:'CHINA'},
-    {c:'ru', n:'RUSSIA'}, {c:'it', n:'ITALY'}, {c:'es', n:'SPAIN'}, {c:'mx', n:'MEXICO'},
-    {c:'ca', n:'CANADA'}, {c:'au', n:'AUSTRALIA'}, {c:'kr', n:'KOREA'}, {c:'id', n:'INDONESIA'}
+    {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},{c:'fr', n:'FRANCE'},
+    {c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},{c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},
+    {c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},{c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'kr', n:'KOREA'},
+    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'SOUTH AFRICA'},{c:'ar', n:'ARGENTINA'},
+    {c:'co', n:'COLOMBIA'},{c:'ve', n:'VENEZUELA'},{c:'pe', n:'PERU'},{c:'cl', n:'CHILE'},{c:'pl', n:'POLAND'},
+    {c:'ua', n:'UKRAINE'},{c:'ro', n:'ROMANIA'},{c:'hu', n:'HUNGARY'},{c:'cz', n:'CZECHIA'},{c:'be', n:'BELGIUM'},
+    {c:'nl', n:'NETHERLANDS'},{c:'se', n:'SWEDEN'},{c:'no', n:'NORWAY'},{c:'fi', n:'FINLAND'},{c:'dk', n:'DENMARK'},
+    {c:'ie', n:'IRELAND'},{c:'pt', n:'PORTUGAL'},{c:'ch', n:'SWITZERLAND'},{c:'at', n:'AUSTRIA'},{c:'il', n:'ISRAEL'},
+    {c:'sa', n:'SAUDI ARABIA'},{c:'ir', n:'IRAN'},{c:'pk', n:'PAKISTAN'},{c:'bd', n:'BANGLADESH'},{c:'lk', n:'SRI LANKA'},
+    {c:'mm', n:'MYANMAR'},{c:'th', n:'THAILAND'},{c:'ph', n:'PHILIPPINES'},{c:'sg', n:'SINGAPORE'},{c:'my', n:'MALAYSIA'},
+    {c:'vn', n:'VIETNAM'},{c:'kh', n:'CAMBODIA'},{c:'la', n:'LAOS'},{c:'np', n:'NEPAL'},{c:'bt', n:'BHUTAN'},
+    {c:'mg', n:'MADAGASCAR'},{c:'ke', n:'KENYA'},{c:'ug', n:'UGANDA'},{c:'tz', n:'TANZANIA'},{c:'ma', n:'MOROCCO'},
+    {c:'dz', n:'ALGERIA'},{c:'tn', n:'TUNISIA'},{c:'ly', n:'LIBYA'},{c:'sd', n:'SUDAN'},{c:'et', n:'ETHIOPIA'},
+    {c:'gh', n:'GHANA'},{c:'ci', n:'IVORY COAST'},{c:'cm', n:'CAMEROON'},{c:'sn', n:'SENEGAL'},{c:'ml', n:'MALI'},
+    {c:'dz', n:'ALGERIA-2'},{c:'nz', n:'NEW ZEALAND'},{c:'cy', n:'CYPRUS'},{c:'gr', n:'GREECE'},{c:'si', n:'SLOVENIA'},
+    {c:'sk', n:'SLOVAKIA'},{c:'hr', n:'CROATIA'},{c:'rs', n:'SERBIA'},{c:'me', n:'MONTENEGRO'},{c:'mk', n:'NORTH MACEDONIA'},
+    {c:'al', n:'ALBANIA'},{c:'lv', n:'LATVIA'},{c:'lt', n:'LITHUANIA'},{c:'ee', n:'ESTONIA'},{c:'lu', n:'LUXEMBOURG'},
+    {c:'is', n:'ICELAND'},{c:'mt', n:'MALTA'},{c:'ad', n:'ANDORRA'},{c:'sm', n:'SAN MARINO'},{c:'va', n:'VATICAN'},
+    {c:'mc', n:'MONACO'},{c:'li', n:'LIECHTENSTEIN'},{c:'bd', n:'BANGLADESH-2'},{c:'do', n:'DOMINICAN REPUBLIC'},{c:'cr', n:'COSTA RICA'},
+    {c:'pa', n:'PANAMA'},{c:'uy', n:'URUGUAY'},{c:'py', n:'PARAGUAY'},{c:'bo', n:'BOLIVIA'},{c:'ec', n:'ECUADOR'},
+    {c:'bg', n:'BULGARIA'},{c:'by', n:'BELARUS'},{c:'kz', n:'KAZAKHSTAN'},{c:'uz', n:'UZBEKISTAN'},{c:'az', n:'AZERBAIJAN'},
+    {c:'ge', n:'GEORGIA'},{c:'am', n:'ARMENIA'},{c:'tn', n:'TUNISIA-2'},{c:'jo', n:'JORDAN'},{c:'lb', n:'LEBANON'}
 ];
 
 const flags = countries.map(x => {
     const img = new Image(); img.crossOrigin = "anonymous";
-    img.src = `https://flagcdn.com/w160/${x.c}.png`;
+    img.src = `https://flagcdn.com/w160/${x.c.toLowerCase()}.png`;
     return { name: x.n, img };
 });
 
@@ -211,17 +232,18 @@ class Ball {
     constructor(item) {
         const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
         this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
-        this.vx = (Math.random()-0.5)*28; this.vy = (Math.random()-0.5)*28;
+        this.vx = (Math.random()-0.5)*40; this.vy = (Math.random()-0.5)*40;
         this.item = item; this.out = false;
     }
     update() {
         this.x += this.vx * slowMo; this.y += this.vy * slowMo;
         const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
-        if (d > RADIUS - BALL_R) {
+        const effectiveRadius = RADIUS - arenaShrink;
+        if (d > effectiveRadius - BALL_R) {
             let ang = Math.atan2(dy, dx) - arenaRotation;
             while(ang < -Math.PI) ang += Math.PI*2;
             while(ang > Math.PI) ang -= Math.PI*2;
-            if (ang > -0.28 && ang < 0.28) {
+            if (ang > -GAP_ANGLE && ang < GAP_ANGLE) {
                 this.out = true;
                 for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
                 elimSound();
@@ -229,7 +251,7 @@ class Ball {
             } else {
                 const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
                 this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
-                this.x = CENTER.x + nx*(RADIUS-BALL_R-2); this.y = CENTER.y + ny*(RADIUS-BALL_R-2);
+                this.x = CENTER.x + nx*(effectiveRadius-BALL_R-2); this.y = CENTER.y + ny*(effectiveRadius-BALL_R-2);
                 bloop();
             }
         }
@@ -243,7 +265,9 @@ class Ball {
 
 function start() {
     balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
-    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i % flags.length]));
+    roundStart = Date.now();
+    arenaShrink = 0;
+    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i]));
     say("THE RACE BEGINS!", true);
     setTimeout(randomCommentary, 6000);
     startBGM();
@@ -259,10 +283,25 @@ function loop() {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 1080, 1920);
     if (running) {
-        arenaRotation += 0.025;
+        // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
+        const elapsed = Date.now() - roundStart;
+        const progress = Math.min(1, elapsed / desiredDuration);
+        let dynamicSpeed = 1 + progress * 4; // ramps from 1x to ~5x
+        // when few balls remain, boost speed further
+        if (balls.length <= 5) dynamicSpeed *= 1.4;
+        if (balls.length <= 3) dynamicSpeed *= 1.6;
+        const baseSlow = announced3 ? 0.8 : 1;
+        slowMo = baseSlow * dynamicSpeed;
+        arenaRotation += 0.06 * dynamicSpeed;
+        // activate arena shrink to force eliminations when few remain
+        if (balls.length <= 5) {
+            arenaShrink += 0.9 * dynamicSpeed; // pixels per frame-ish
+            const maxShrink = RADIUS - 140; // don't shrink below this
+            arenaShrink = Math.min(arenaShrink, maxShrink);
+        }
         balls.forEach(b => b.update());
         balls = balls.filter(b => !b.out);
-        if (balls.length === 3 && !announced3) { announced3 = true; slowMo = 0.4; say("FINAL THREE COUNTRIES!", true); }
+        if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL THREE COUNTRIES!", true); }
         if (balls.length === 1) {
             running = false;
             const w = balls[0].item;
@@ -283,7 +322,9 @@ function loop() {
     ctx.shadowBlur = 20; 
     ctx.shadowColor = "#00f2ff";
     ctx.beginPath(); 
-    ctx.arc(0, 0, RADIUS, 0.28, -0.28); 
+    // draw ring with a visible gap that matches the elimination window
+    const drawRadius = Math.max(120, RADIUS - arenaShrink);
+    ctx.arc(0, 0, drawRadius, GAP_ANGLE, -GAP_ANGLE);
     ctx.stroke(); 
     ctx.restore();
     
