@@ -1,4 +1,330 @@
-<h2>My Games</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 MEGA GAME HUB - The Ultimate Gaming Experience</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0d1b4a 100%);
+            color: #fff;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-<a href="country-circle/">Play Country Circle</a><br>
-<a href="country-war/">Play Country War</a>
+        #container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            z-index: 10;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            text-shadow: 0 0 30px #00f2ff, 0 0 60px #ff00ff;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #00f2ff;
+            text-shadow: 0 0 10px #00f2ff;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            width: 90%;
+            z-index: 10;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.1), rgba(255, 0, 85, 0.1));
+            border: 2px solid #00f2ff;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.8);
+            border-color: #ff00ff;
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .game-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #00f2ff;
+            text-shadow: 0 0 10px #00f2ff;
+        }
+
+        .game-card p {
+            font-size: 0.95rem;
+            color: #ccc;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .game-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .stat {
+            background: rgba(0, 242, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 3px solid #00f2ff;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00f2ff, #ff00ff);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 900;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.8);
+        }
+
+        .play-btn:active {
+            transform: scale(0.98);
+        }
+
+        #leaderboard {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00f2ff;
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 250px;
+            z-index: 20;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        #leaderboard h3 {
+            color: #00f2ff;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            padding: 5px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        }
+
+        .leaderboard-entry span:first-child {
+            color: #00f2ff;
+        }
+
+        .leaderboard-entry span:last-child {
+            color: #ff00ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="header">
+            <h1>🎮 MEGA GAME HUB</h1>
+            <p>Choose Your Challenge & Dominate the Leaderboard!</p>
+        </div>
+
+        <div class="games-grid">
+            <!-- GAME 1: Ball Survival -->
+            <div class="game-card">
+                <div class="game-icon">🎾</div>
+                <h2>Ball Survival</h2>
+                <p>Keep the ball alive as obstacles close in! Test your reflexes in this intense survival game.</p>
+                <div class="game-stats">
+                    <div class="stat">⏱️ Quick Play</div>
+                    <div class="stat">🏆 Leaderboard</div>
+                </div>
+                <button class="play-btn" onclick="playGame('ball-survival')">PLAY NOW</button>
+            </div>
+
+            <!-- GAME 2: War Battle Arena -->
+            <div class="game-card">
+                <div class="game-icon">⚔️</div>
+                <h2>War Battle Arena</h2>
+                <p>Destroy enemies, level up weapons, and become the ultimate warrior! Auto-pilot action game.</p>
+                <div class="game-stats">
+                    <div class="stat">🎯 Weapons</div>
+                    <div class="stat">⭐ Leveling</div>
+                </div>
+                <button class="play-btn" onclick="playGame('war-battle')">PLAY NOW</button>
+            </div>
+
+            <!-- GAME 3: Country Quiz Master -->
+            <div class="game-card">
+                <div class="game-icon">🌍</div>
+                <h2>Country Quiz Master</h2>
+                <p>Test your geography knowledge! Answer trivia questions and climb the global rankings.</p>
+                <div class="game-stats">
+                    <div class="stat">📚 Educational</div>
+                    <div class="stat">🔥 Time Challenge</div>
+                </div>
+                <button class="play-btn" onclick="playGame('quiz-master')">PLAY NOW</button>
+            </div>
+
+            <!-- GAME 4: Bubble Maze -->
+            <div class="game-card">
+                <div class="game-icon">🫧</div>
+                <h2>Bubble Maze Dash</h2>
+                <p>Navigate through an ever-changing maze of bubbles! Reach the exit before time runs out.</p>
+                <div class="game-stats">
+                    <div class="stat">🎨 Colorful</div>
+                    <div class="stat">⚡ Speed Rush</div>
+                </div>
+                <button class="play-btn" onclick="playGame('bubble-maze')">PLAY NOW</button>
+            </div>
+        </div>
+
+        <div id="leaderboard">
+            <h3>🏆 GLOBAL LEADERBOARD</h3>
+            <div id="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Create random stars
+        function createStars() {
+            const container = document.getElementById('container');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'stars';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(star);
+            }
+        }
+
+        createStars();
+
+        // Load and display leaderboard
+        function updateLeaderboard() {
+            const lb = JSON.parse(localStorage.getItem('gameLB') || '{}');
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            Object.entries(lb)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .forEach(([game, score], idx) => {
+                    const entry = document.createElement('div');
+                    entry.className = 'leaderboard-entry';
+                    entry.innerHTML = `
+                        <span>${idx + 1}. ${game.toUpperCase()}</span>
+                        <span>${score}</span>
+                    `;
+                    list.appendChild(entry);
+                });
+        }
+
+        function playGame(gameType) {
+            const routes = {
+                'ball-survival': 'country-bubble/index.html',
+                'war-battle': 'country-war/index.html',
+                'quiz-master': 'quiz-master/index.html',
+                'bubble-maze': 'bubble-maze/index.html'
+            };
+            
+            if (routes[gameType]) {
+                window.location.href = routes[gameType];
+            }
+        }
+
+        updateLeaderboard();
+        setInterval(updateLeaderboard, 2000);
+    </script>
+</body>
+</html>

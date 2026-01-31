@@ -7,14 +7,14 @@
     <style>
         :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
         body {
-            margin:0; background:#050508; overflow:hidden;
+            margin:0; background:#0a0a0a; overflow:hidden;
             display:flex; justify-content:center; align-items:center;
             font-family:'Arial Black', sans-serif; height: 100vh;
         }
         #stream {
             width:100vw; height:177.77vw;
             max-width:56.25vh; max-height:100vh;
-            position:relative; background:#000;
+            position:relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
         }
         canvas { width:100%; height:100%; display:block; }
         
@@ -250,7 +250,14 @@ function start() {
 }
 
 function loop() {
-    ctx.fillStyle = "#050508"; ctx.fillRect(0, 0, 1080, 1920);
+    const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(0.25, '#764ba2');
+    gradient.addColorStop(0.5, '#f093fb');
+    gradient.addColorStop(0.75, '#4facfe');
+    gradient.addColorStop(1, '#667eea');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1080, 1920);
     if (running) {
         arenaRotation += 0.025;
         balls.forEach(b => b.update());

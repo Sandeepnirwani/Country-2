@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>⚔️ WAR BATTLE ARENA</title>
+<style>
+  :root { --neon: #00f2ff; --bg: #010105; --p1: #00ff88; --p2: #ff0055; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; display:flex; align-items:center; justify-content:center; -webkit-font-smoothing:antialiased; }
+
+  #viewport { position: relative; aspect-ratio: 9/16; width: min(100vw, calc(100vh * 9 / 16)); max-width: 480px; height: auto; border: 2px solid rgba(0,242,255,0.06); box-sizing: border-box; overflow: hidden; background: radial-gradient(circle, #050515, #000); }
+
+  canvas { display: block; width: 100%; height: 100%; filter: contrast(1.2) brightness(1.1); background: transparent; }
+  #ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; box-sizing: border-box; }
+  #hud { position: absolute; top: 14px; left: 14px; pointer-events: auto; }
+  .stat { font-size: 10px; color: var(--neon); letter-spacing: 1.5px; margin-bottom: 5px; opacity: 0.9; }
+  .val { font-size: 18px; font-weight: 900; text-shadow: 0 0 10px var(--neon); }
+
+  #topbar { position: absolute; top: 14px; right: 14px; text-align: right; }
+  #topbar .val { color: var(--p2); }
+
+  #start-screen { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:100; text-align:center; background: rgba(1,1,1,0.8); }
+  h1 { font-size: 28px; letter-spacing: 8px; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 0; }
+  button { padding: 14px 36px; font-size: 16px; background: linear-gradient(135deg, var(--neon), var(--p1)); border: 2px solid var(--neon); color: black; cursor: pointer; border-radius: 6px; transition: 0.18s; font-family: inherit; margin-top: 20px; pointer-events: auto; font-weight: bold; }
+  button:hover { transform: scale(1.1); box-shadow: 0 0 30px var(--neon); }
+
+  #xp-container { position:absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 320px; text-align: center; }
+  #xp-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; border: 1px solid var(--neon); }
+  #xp-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--p1), var(--p2)); box-shadow: 0 0 10px var(--p1); transition: width 0.3s; }
+
+  #gameOverScreen { position: absolute; inset: 0; display: none; background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; justify-content: center; align-items: center; }
+  #gameOverScreen h1 { font-size: 2.5rem; color: var(--p2); margin-bottom: 30px; }
+  .gameOverStat { font-size: 1.2rem; margin: 12px 0; color: var(--neon); }
+  #backBtn { margin-top: 40px; }
+
+  @media (min-aspect-ratio: 9/16) { #viewport { height: 100vh; width: calc(100vh * 9 / 16); } }
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="start-screen">
+      <h1>⚔️ WAR ARENA</h1>
+      <p style="color: #888; font-size: 0.95rem;">DESTROY ENEMIES • LEVEL UP • DOMINATE</p>
+      <button id="launchBtn">START BATTLE</button>
+  </div>
+
+  <div id="ui-layer">
+      <div id="hud">
+          <div class="stat">KILLS</div>
+          <div id="kills" class="val">0</div>
+          <div class="stat" style="margin-top:20px">WEAPON</div>
+          <div id="tierName" class="val" style="color:var(--p2); text-shadow: 0 0 15px var(--p2);">GATLING</div>
+      </div>
+      <div id="topbar">
+          <div class="stat">ENEMIES</div>
+          <div id="enemies" class="val">0</div>
+          <div class="stat" style="margin-top:10px;">WAVE</div>
+          <div id="wave" class="val">1</div>
+      </div>
+      <div id="xp-container">
+          <div id="rankText" style="font-size: 13px; margin-bottom: 8px; letter-spacing: 2px; color: var(--neon);">ROOKIE</div>
+          <div id="xp-bar"><div id="xp-fill"></div></div>
+      </div>
+  </div>
+
+  <div id="gameOverScreen">
+    <h1>⚔️ BATTLE COMPLETE</h1>
+    <div class="gameOverStat">Total Kills: <span id="finalKills">0</span></div>
+    <div class="gameOverStat">Wave Reached: <span id="finalWave">1</span></div>
+    <div class="gameOverStat">Max Weapon: <span id="finalWeapon">GATLING</span></div>
+    <button id="backBtn" onclick="window.location.href='../'">⬅️ BACK TO HUB</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const killsEl = document.getElementById('kills');
+const tierEl = document.getElementById('tierName');
+const xpFill = document.getElementById('xp-fill');
+const rankEl = document.getElementById('rankText');
+const enemiesEl = document.getElementById('enemies');
+const waveEl = document.getElementById('wave');
+
+let W, H, shake = 0, kills = 0, weaponTier = 0, gameActive = false, waveNum = 1, lastWaveTime = 0;
+
+let audioCtx;
+const playSound = (freq, type, dur, vol, slide = 0) => {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if(slide) osc.frequency.exponentialRampToValueAtTime(slide, audioCtx.currentTime + dur);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain); 
+    gain.connect(audioCtx.destination);
+    osc.start(); 
+    osc.stop(audioCtx.currentTime + dur);
+};
+
+const WEAPONS = [
+    { name: "GATLING", color: "#00ff88", count: 3, speed: 18, size: 4, cool: 100, snd: 700 },
+    { name: "BLASTER", color: "#00d4ff", count: 1, speed: 12, size: 16, cool: 200, snd: 300 },
+    { name: "PLASMA BURST", color: "#ffea00", count: 6, speed: 16, size: 5, cool: 150, snd: 500 },
+    { name: "OMEGA BEAM", color: "#ff0055", count: 1, speed: 32, size: 28, cool: 70, snd: 1000 },
+    { name: "MEGABLAST", color: "#ff69b4", count: 2, speed: 20, size: 20, cool: 120, snd: 600 }
+];
+
+let player = { x: 0, y: 0, tx: 0, ty: 0, lastFire: 0, health: 100 };
+let bullets = [], enemies = [], particles = [], floatingTexts = [];
+
+const viewport = document.getElementById('viewport');
+const DPR = Math.max(1, window.devicePixelRatio || 1);
+
+const resize = () => {
+    const cw = Math.max(200, viewport.clientWidth);
+    const ch = Math.max(200, viewport.clientHeight);
+    W = Math.floor(cw);
+    H = Math.floor(ch);
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    player.x = W / 2;
+    player.y = H - Math.min(90, H * 0.12);
+    player.tx = player.x; 
+    player.ty = player.y;
+};
+window.addEventListener('resize', resize);
+resize();
+
+function spawnEnemy() {
+    if (enemies.length >= 8 + waveNum * 2) return;
+    const health = 1 + Math.floor(waveNum * 0.5);
+    enemies.push({
+        x: Math.random() * W, 
+        y: -60,
+        hp: health, 
+        maxHp: health,
+        size: 35 + Math.random() * 25,
+        speed: 2 + Math.random() * 3 + waveNum * 0.4,
+        flash: 0, 
+        emoji: ['👾','👽','🛸','🤖','💀','🔥','⚡','🌪️'][Math.floor(Math.random()*8)]
+    });
+}
+
+function spawnText(x, y, txt, color) {
+    floatingTexts.push({ x, y, txt, color, life: 1, vy: -2 });
+}
+
+function spawnParticles(x, y, color, count = 12) {
+    for(let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: Math.random() * -4 - 2,
+            life: 0.8,
+            color
+        });
+    }
+}
+
+function update() {
+    if(!gameActive) return;
+
+    if (enemies.length === 0 && Date.now() - lastWaveTime > 2000) {
+        waveNum++;
+        lastWaveTime = Date.now();
+        playSound(880, 'sine', 0.4, 0.08, 1200);
+        spawnText(W/2, H/2, `WAVE ${waveNum}!`, '#ffff00');
+    }
+
+    let target = null, minDist = 9999;
+    enemies.forEach(e => {
+        let d = Math.hypot(e.x - player.x, e.y - player.y);
+        if(d < minDist) { minDist = d; target = e; }
+    });
+
+    if(target) {
+        player.tx = target.x;
+        player.ty = Math.max(H - 200, H - 150);
+        const w = WEAPONS[weaponTier];
+        if(Date.now() - player.lastFire > w.cool) {
+            for(let i = 0; i < w.count; i++) {
+                const angle = (i - (w.count-1)/2) * 0.3;
+                bullets.push({ 
+                    x: player.x + (i-(w.count-1)/2)*25, 
+                    y: player.y - 20, 
+                    size: w.size, 
+                    speed: w.speed, 
+                    color: w.color,
+                    angle: angle
+                });
+            }
+            player.lastFire = Date.now();
+            playSound(w.snd, weaponTier === 1 ? 'square' : 'sine', 0.08, 0.06, 50);
+            shake = Math.min(8, weaponTier + 2);
+        }
+    } else { 
+        player.tx = W/2 + Math.sin(Date.now()*0.002)*100; 
+    }
+
+    player.x += (player.tx - player.x) * 0.1;
+    player.y += (player.ty - player.y) * 0.1;
+
+    if(Math.random() < 0.06 + waveNum * 0.01) spawnEnemy();
+
+    bullets.forEach(b => {
+        b.y -= b.speed;
+        b.x += Math.sin(b.angle) * 3;
+        
+        let hit = false;
+        enemies.forEach(e => {
+            if(Math.hypot(b.x - e.x, b.y - e.y) < e.size/2 + b.size) {
+                hit = true;
+                e.hp--; 
+                e.flash = 5;
+                spawnText(e.x, e.y, "-1", "#00ff88");
+                playSound(200, 'triangle', 0.04, 0.025);
+                
+                if(e.hp <= 0) {
+                    e.dead = true; 
+                    kills++;
+                    shake = 12;
+                    playSound(100, 'square', 0.3, 0.1, 20);
+                    spawnParticles(e.x, e.y, WEAPONS[weaponTier].color, 20);
+                }
+            }
+        });
+        if(hit) b.dead = true;
+    });
+
+    const oldTier = weaponTier;
+    weaponTier = Math.min(4, Math.floor(kills / 35));
+    if(weaponTier !== oldTier) {
+        tierEl.innerText = WEAPONS[weaponTier].name;
+        rankEl.innerText = ["ROOKIE","ELITE","ACE","LEGEND","GODMODE"][weaponTier];
+        playSound(1200, 'sine', 0.6, 0.12, 1800);
+        spawnParticles(W/2, 50, WEAPONS[weaponTier].color, 25);
+    }
+
+    bullets = bullets.filter(b => !b.dead && b.y > -50);
+    enemies = enemies.filter(e => {
+        e.y += e.speed;
+        if(e.flash > 0) e.flash--;
+        return !e.dead && e.y < H + 50;
+    });
+    
+    particles.forEach(p => { 
+        p.x += p.vx; 
+        p.y += p.vy; 
+        p.vy += 0.15;
+        p.life -= 0.015; 
+    });
+    particles = particles.filter(p => p.life > 0);
+    
+    floatingTexts.forEach(t => { 
+        t.y += t.vy; 
+        t.life -= 0.025; 
+    });
+    floatingTexts = floatingTexts.filter(t => t.life > 0);
+    
+    xpFill.style.width = `${(kills % 35) * 2.86}%`;
+    killsEl.innerText = kills;
+    enemiesEl.innerText = enemies.length;
+    waveEl.innerText = waveNum;
+}
+
+function draw() {
+    ctx.fillStyle = '#010105';
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    if(shake > 0) { 
+        ctx.translate(Math.random()*shake-shake/2, Math.random()*shake-shake/2); 
+        shake *= 0.92; 
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    for(let i=0; i<40; i++) {
+        ctx.fillRect((i*89 + Date.now()*0.02)%W, (Date.now()*0.05 + i*47)%H, 1.5, 1.5);
+    }
+
+    bullets.forEach(b => {
+        ctx.shadowBlur = 20; 
+        ctx.shadowColor = b.color;
+        ctx.fillStyle = b.color;
+        ctx.beginPath(); 
+        ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2); 
+        ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    enemies.forEach(e => {
+        if(e.flash > 0) ctx.filter = "brightness(2)";
+        ctx.font = `${e.size}px serif`;
+        ctx.fillText(e.emoji, e.x, e.y);
+        ctx.filter = "none";
+        
+        ctx.fillStyle = "rgba(0, 242, 255, 0.3)";
+        ctx.fillRect(e.x - e.size/2, e.y - e.size/2 - 15, e.size, 4);
+        ctx.fillStyle = "#00ff88";
+        ctx.fillRect(e.x - e.size/2, e.y - e.size/2 - 15, (e.hp / e.maxHp) * e.size, 4);
+    });
+
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    floatingTexts.forEach(t => {
+        ctx.globalAlpha = t.life;
+        ctx.fillStyle = t.color;
+        ctx.font = "bold 18px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(t.txt, t.x, t.y);
+    });
+    ctx.globalAlpha = 1.0;
+
+    ctx.shadowBlur = 25; 
+    ctx.shadowColor = WEAPONS[weaponTier].color;
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y - 35);
+    ctx.lineTo(player.x + 22, player.y + 12);
+    ctx.lineTo(player.x - 22, player.y + 12);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.fillStyle = WEAPONS[weaponTier].color;
+    ctx.beginPath();
+    ctx.arc(player.x, player.y - 20, 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+}
+
+document.getElementById('launchBtn').onclick = () => {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('start-screen').style.display = 'none';
+    gameActive = true;
+    lastWaveTime = Date.now();
+    
+    const lfo = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    lfo.type = 'sine'; 
+    lfo.frequency.value = 60;
+    g.gain.value = 0.015; 
+    lfo.connect(g); 
+    g.connect(audioCtx.destination);
+    lfo.start();
+    
+    playSound(440, 'sine', 0.3, 0.08);
+};
+
+setInterval(update, 1000/60);
+draw();
+
+setTimeout(() => {
+    if(gameActive) {
+        gameActive = false;
+        document.getElementById('gameOverScreen').style.display = 'flex';
+        document.getElementById('finalKills').textContent = kills;
+        document.getElementById('finalWave').textContent = waveNum;
+        document.getElementById('finalWeapon').textContent = WEAPONS[weaponTier].name;
+    }
+}, 180000);
+
+</script>
+</body>
+</html>
