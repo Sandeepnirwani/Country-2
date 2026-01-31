@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Master Your IQ - Ultimate Intelligence Test</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a0033 50%, #0f0f1e 100%);
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  min-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+}
+
+.container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  overflow: hidden;
+}
+
+.menu-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+.header {
+  text-align: center;
+}
+
+.main-title {
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: bold;
+  background: linear-gradient(45deg, #00eaff, #00ff88, #ff00ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+  text-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #00eaff;
+  opacity: 0.8;
+  letter-spacing: 3px;
+}
+
+.difficulty-section {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.difficulty-btn {
+  padding: 15px 30px;
+  font-size: 16px;
+  border: 2px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.difficulty-btn.easy {
+  border-color: #00ff88;
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.difficulty-btn.easy:hover {
+  box-shadow: 0 0 20px #00ff88;
+  background: rgba(0, 255, 136, 0.2);
+}
+
+.difficulty-btn.medium {
+  border-color: #ffaa00;
+  color: #ffaa00;
+  background: rgba(255, 170, 0, 0.1);
+}
+
+.difficulty-btn.medium:hover {
+  box-shadow: 0 0 20px #ffaa00;
+  background: rgba(255, 170, 0, 0.2);
+}
+
+.difficulty-btn.hard {
+  border-color: #ff4d4d;
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+
+.difficulty-btn.hard:hover {
+  box-shadow: 0 0 20px #ff4d4d;
+  background: rgba(255, 77, 77, 0.2);
+}
+
+.game-screen {
+  display: none;
+}
+
+.title {
+  font-size: clamp(16px, 5vw, 24px);
+  letter-spacing: 2px;
+  color: #00eaff;
+  opacity: 0.9;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  width: 90%;
+  max-width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00eaff);
+  transition: width 0.3s;
+}
+
+.score-board {
+  display: flex;
+  justify-content: space-around;
+  width: 90%;
+  max-width: 100%;
+  margin-bottom: 10px;
+  font-size: clamp(12px, 3vw, 14px);
+}
+
+.score-item {
+  display: flex;
+  gap: 5px;
+}
+
+.score-label {
+  color: #00eaff;
+  opacity: 0.7;
+}
+
+.question {
+  font-size: clamp(32px, 10vw, 56px);
+  margin: 15px 0;
+  text-shadow: 0 0 30px rgba(0, 234, 255, 0.6);
+  font-weight: bold;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 90%;
+  max-width: 100%;
+  margin-bottom: 15px;
+}
+
+.option {
+  border: 2px solid #555;
+  padding: 12px;
+  font-size: clamp(16px, 4vw, 24px);
+  border-radius: 12px;
+  transition: all 0.3s;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+}
+
+.option:hover {
+  border-color: #00eaff;
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+}
+
+.correct {
+  border-color: #00ff88;
+  box-shadow: 0 0 25px #00ff88;
+  background: rgba(0, 255, 136, 0.2);
+}
+
+.wrong {
+  opacity: 0.4;
+  border-color: #ff4d4d;
+}
+
+.timer {
+  margin-top: 10px;
+  font-size: clamp(32px, 12vw, 48px);
+  font-weight: bold;
+  color: #00ff88;
+}
+
+.timer.warning {
+  color: #ffaa00;
+}
+
+.timer.danger {
+  color: #ff4d4d;
+  animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: clamp(12px, 3vw, 16px);
+  opacity: 0.7;
+  color: #00eaff;
+}
+
+.answerText {
+  margin-top: 20px;
+  font-size: 28px;
+  color: #ff4d4d;
+  display: none;
+}
+
+.results-screen {
+  display: none;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.result-title {
+  font-size: 42px;
+  font-weight: bold;
+  background: linear-gradient(45deg, #00ff88, #00eaff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.final-score {
+  font-size: 64px;
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.performance-level {
+  font-size: 28px;
+  margin: 20px 0;
+}
+
+.performance-level.genius {
+  color: #ff00ff;
+}
+
+.performance-level.excellent {
+  color: #00ff88;
+}
+
+.performance-level.good {
+  color: #00eaff;
+}
+
+.performance-level.average {
+  color: #ffaa00;
+}
+
+.performance-level.needswork {
+  color: #ff4d4d;
+}
+
+.restart-btn {
+  padding: 15px 40px;
+  font-size: 18px;
+  border: 2px solid #00eaff;
+  color: #00eaff;
+  background: rgba(0, 234, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.restart-btn:hover {
+  box-shadow: 0 0 20px #00eaff;
+  background: rgba(0, 234, 255, 0.2);
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <!-- MENU SCREEN -->
+  <div id="menuScreen" class="menu-screen">
+    <div class="header">
+      <div class="main-title">🧠 MASTER YOUR IQ 🧠</div>
+      <div class="subtitle">TEST YOUR INTELLIGENCE</div>
+    </div>
+    <div class="difficulty-section">
+      <button class="difficulty-btn easy" onclick="startGame('easy')">🟢 Easy</button>
+      <button class="difficulty-btn medium" onclick="startGame('medium')">🟡 Medium</button>
+      <button class="difficulty-btn hard" onclick="startGame('hard')">🔴 Hard</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="game-screen">
+    <div class="title" id="difficultyLabel"></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="score-board">
+      <div class="score-item">
+        <span class="score-label">Total:</span>
+        <span id="questionCount">0</span>
+      </div>
+      <div class="score-item">
+        <span class="score-label">Correct:</span>
+        <span id="correctCount">0</span>
+      </div>
+    </div>
+    <div id="question" class="question">8 + 5 × 2 = ?</div>
+    <div class="options">
+      <div id="A" class="option">A) 18</div>
+      <div id="B" class="option">B) 26</div>
+      <div id="C" class="option">C) 21</div>
+      <div id="D" class="option">D) 28</div>
+    </div>
+    <div id="timer" class="timer">30</div>
+    <div class="hint">Answer carefully! ⏱️</div>
+    <div id="answerText" class="answerText">Correct Answer: C</div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultsScreen" class="results-screen">
+    <div class="result-title">TEST COMPLETE! 🎯</div>
+    <div class="final-score" id="finalScore">8/10</div>
+    <div class="performance-level" id="performanceLevel">EXCELLENT!</div>
+    <button class="restart-btn" onclick="backToMenu()">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ==================== GAME DATA ====================
+const questionSets = {
+  easy: [
+    { q: "2 + 3", opts: [5, 6, 4, 7], ans: "A" },
+    { q: "5 × 2", opts: [10, 12, 9, 8], ans: "A" },
+    { q: "10 − 3", opts: [7, 6, 8, 5], ans: "A" },
+    { q: "2, 4, 6, ?", opts: [8, 10, 7, 9], ans: "A" },
+    { q: "3 + 4 + 2", opts: [9, 8, 10, 7], ans: "A" },
+    { q: "12 ÷ 3", opts: [4, 5, 3, 6], ans: "A" },
+    { q: "5 + 5", opts: [10, 11, 9, 12], ans: "A" },
+    { q: "6 × 2", opts: [12, 13, 11, 14], ans: "A" },
+    { q: "15 − 5", opts: [10, 9, 11, 8], ans: "A" },
+    { q: "1, 2, 3, ?", opts: [4, 5, 3, 6], ans: "A" }
+  ],
+  medium: [
+    { q: "8 + 5 × 2", opts: [26, 18, 21, 28], ans: "B" },
+    { q: "9 − 3 ÷ 3", opts: [2, 8, 3, 1], ans: "B" },
+    { q: "2, 4, 8, 16, ?", opts: [24, 32, 20, 28], ans: "B" },
+    { q: "5 × (3 + 1)", opts: [15, 20, 25, 18], ans: "B" },
+    { q: "7 + 7 ÷ 7", opts: [2, 8, 7, 14], ans: "B" },
+    { q: "3, 6, 9, 12, ?", opts: [15, 18, 14, 16], ans: "A" },
+    { q: "(10 + 5) ÷ 3", opts: [4, 5, 3, 6], ans: "B" },
+    { q: "2³ + 4", opts: [12, 8, 10, 6], ans: "A" },
+    { q: "5!, what's next?", opts: [6, 120, 720, 360], ans: "C" },
+    { q: "10² − 50", opts: [50, 100, 75, 25], ans: "A" }
+  ],
+  hard: [
+    { q: "√144 + 2³", opts: [20, 16, 24, 12], ans: "A" },
+    { q: "(15 − 3) ÷ 4 + 5", opts: [8, 10, 12, 9], ans: "A" },
+    { q: "2⁴ + 3²", opts: [25, 16, 23, 28], ans: "A" },
+    { q: "1+2+3+...+10", opts: [45, 55, 50, 40], ans: "A" },
+    { q: "If 3x + 5 = 20, x = ?", opts: [5, 8, 3, 7], ans: "A" },
+    { q: "√(100 − 36)", opts: [8, 6, 10, 4], ans: "A" },
+    { q: "3, 6, 12, 24, ?", opts: [48, 36, 42, 40], ans: "A" },
+    { q: "15² − 10²", opts: [125, 100, 75, 150], ans: "A" },
+    { q: "If x² = 64, x = ?", opts: [8, 4, 6, 16], ans: "A" },
+    { q: "5! + 4! − 3!", opts: [138, 120, 144, 100], ans: "A" }
+  ]
+};
+
+let currentDifficulty = "medium";
+let currentQuestions = [];
+let current = 0;
+let timeLeft = 30;
+let correctKey = "";
+let phase = "question";
+let correctCount = 0;
+let totalQuestions = Infinity;
+let questionsAnswered = 0;
+
+const qEl = document.getElementById("question");
+const tEl = document.getElementById("timer");
+const ansEl = document.getElementById("answerText");
+const opts = {
+  A: document.getElementById("A"),
+  B: document.getElementById("B"),
+  C: document.getElementById("C"),
+  D: document.getElementById("D")
+};
+
+// ==================== SCREEN MANAGEMENT ====================
+function showMenu() {
+  document.getElementById("menuScreen").style.display = "flex";
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "none";
+}
+
+function showGame() {
+  document.getElementById("menuScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "block";
+  document.getElementById("resultsScreen").style.display = "none";
+}
+
+function showResults() {
+  document.getElementById("menuScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "flex";
+}
+
+function startGame(difficulty) {
+  currentDifficulty = difficulty;
+  correctCount = 0;
+  questionsAnswered = 0;
+  current = 0;
+  
+  const labels = {
+    easy: "🟢 EASY MODE - INFINITE",
+    medium: "🟡 MEDIUM MODE - INFINITE",
+    hard: "🔴 HARD MODE - INFINITE"
+  };
+  
+  document.getElementById("difficultyLabel").textContent = "Test Your IQ";
+  currentQuestions = [...questionSets[difficulty]];
+  
+  showGame();
+  startRound();
+}
+
+function backToMenu() {
+  showMenu();
+}
+
+// ==================== HELPERS ====================
+function resetOptions() {
+  Object.values(opts).forEach(o => {
+    o.classList.remove("correct", "wrong");
+  });
+}
+
+function updateProgress() {
+  questionsAnswered++;
+  document.getElementById("progressFill").style.width = "100%";
+  document.getElementById("questionCount").textContent = questionsAnswered;
+  document.getElementById("correctCount").textContent = correctCount;
+}
+
+// ==================== ROUND SETUP ====================
+function startRound() {
+  resetOptions();
+  ansEl.style.display = "none";
+  phase = "question";
+  timeLeft = 30;
+  
+  const item = currentQuestions[current];
+  qEl.textContent = item.q + " = ?";
+  
+  const keys = ["A", "B", "C", "D"];
+  keys.forEach((k, i) => {
+    opts[k].textContent = `${k}) ${item.opts[i]}`;
+    if (k === item.ans) correctKey = k;
+  });
+  
+  updateProgress();
+  updateTimerDisplay();
+  
+  // Auto-play: Select random answer after 45 seconds (audience guess time)
+  setTimeout(autoSelectAnswer, 45000);
+}
+
+function autoSelectAnswer() {
+  if (phase === "question") {
+    // Randomly select an answer (A, B, C, or D)
+    const keys = ["A", "B", "C", "D"];
+    const randomKey = keys[Math.floor(Math.random() * 4)];
+    
+    const isCorrect = randomKey === correctKey;
+    if (isCorrect) {
+      correctCount++;
+    }
+    
+    phase = "answer";
+    ansEl.textContent = `Correct Answer: ${correctKey}`;
+    ansEl.style.display = "block";
+    
+    // Highlight selected answer and correct answer
+    keys.forEach(k => {
+      if (k === correctKey) {
+        opts[k].classList.add("correct");
+      } else if (k === randomKey && k !== correctKey) {
+        opts[k].classList.add("wrong");
+      }
+    });
+    
+    // Auto-advance to next question after 3 seconds
+    setTimeout(nextRound, 3000);
+  }
+}
+
+function updateTimerDisplay() {
+  tEl.textContent = timeLeft;
+  tEl.classList.remove("warning", "danger");
+  
+  if (timeLeft < 10 && timeLeft >= 5) {
+    tEl.classList.add("warning");
+  } else if (timeLeft < 5) {
+    tEl.classList.add("danger");
+  }
+}
+
+// ==================== ANSWER REVEAL ====================
+function showAnswer() {
+  phase = "answer";
+  const isCorrect = event && event.target.id === correctKey;
+  
+  if (isCorrect) {
+    correctCount++;
+  }
+  
+  ansEl.textContent = `Correct Answer: ${correctKey}`;
+  ansEl.style.display = "block";
+  
+  Object.keys(opts).forEach(k => {
+    if (k === correctKey) {
+      opts[k].classList.add("correct");
+    } else {
+      opts[k].classList.add("wrong");
+    }
+  });
+  
+  setTimeout(nextRound, 2000);
+}
+
+function nextRound() {
+  current = (current + 1) % currentQuestions.length;
+  startRound();
+}
+
+function endGame() {
+  const percentage = Math.round((correctCount / totalQuestions) * 100);
+  document.getElementById("finalScore").textContent = correctCount + "/" + totalQuestions + " (" + percentage + "%)";
+  
+  let levelClass = "average";
+  let levelText = "AVERAGE";
+  
+  if (percentage === 100) {
+    levelClass = "genius";
+    levelText = "🧠 GENIUS! 🧠";
+  } else if (percentage >= 80) {
+    levelClass = "excellent";
+    levelText = "⭐ EXCELLENT! ⭐";
+  } else if (percentage >= 60) {
+    levelClass = "good";
+    levelText = "✨ GOOD JOB! ✨";
+  } else if (percentage >= 40) {
+    levelClass = "average";
+    levelText = "KEEP PRACTICING!";
+  } else {
+    levelClass = "needswork";
+    levelText = "💪 LEARN MORE! 💪";
+  }
+  
+  const perfLevel = document.getElementById("performanceLevel");
+  perfLevel.className = "performance-level " + levelClass;
+  perfLevel.textContent = levelText;
+  
+  showResults();
+}
+
+// ==================== OPTION CLICK HANDLER ====================
+// Removed - game is now fully automated
+
+// ==================== TIMER LOOP ====================
+setInterval(() => {
+  if (phase === "question" && document.getElementById("gameScreen").style.display !== "none") {
+    updateTimerDisplay();
+    timeLeft--;
+    if (timeLeft < 0) {
+      showAnswer();
+    }
+  }
+}, 1000);
+
+// ==================== START ====================
+// Auto-select random difficulty and start game
+const difficulties = ['easy', 'medium', 'hard'];
+const randomDifficulty = difficulties[Math.floor(Math.random() * 3)];
+setTimeout(() => startGame(randomDifficulty), 500);
+</script>
+</body>
+</html>
