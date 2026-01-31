@@ -54,9 +54,9 @@
             position:absolute; bottom:0; width:100%; height:60px; 
             background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
         }
-        #tickerInner { display:flex; gap:60px; white-space:nowrap; animation: scrollTicker 35s linear infinite; }
-        @keyframes scrollTicker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; }
+        #tickerInner { display:flex; gap:30px; white-space:nowrap; animation: scrollTicker 80s linear infinite; will-change: transform; }
+        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-66.66%); } }
+        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; flex-shrink: 0; }
         .tick img { width:40px; height:28px; border-radius:4px; }
 
         #startOverlay {
@@ -109,7 +109,7 @@ const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
 
 let balls = [], particles = [], exited = [];
 let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
-let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s)
+let roundStart = 0, desiredDuration = 50000; // desired round duration in ms (~50s for balance)
 let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
 
 // --- DYNAMIC BACKGROUND MUSIC ---
@@ -180,8 +180,9 @@ function say(t, important = false) {
     const comEl = document.getElementById('commentary');
     comEl.textContent = t; comEl.style.opacity = 1;
     setTimeout(() => { if(comEl.textContent === t) comEl.style.opacity = 0; }, important ? 4000 : 2000);
+    window.speechSynthesis.cancel(); // clear any queued speech for instant sync
     const u = new SpeechSynthesisUtterance(t);
-    u.rate = 1.15; u.pitch = 1.0;
+    u.rate = 1.2; u.pitch = 1.0;
     window.speechSynthesis.speak(u);
 }
 
@@ -224,7 +225,9 @@ const flags = countries.map(x => {
 });
 
 const tickerInner = document.getElementById('tickerInner');
-flags.forEach(f => {
+// Triple flags for seamless infinite scroll
+const allFlags = [...flags, ...flags, ...flags];
+allFlags.forEach(f => {
     tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
 });
 
@@ -247,7 +250,7 @@ class Ball {
                 this.out = true;
                 for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
                 elimSound();
-                if(balls.length <= 4) say(this.item.name + " ELIMINATED!", true);
+                if(balls.length <= 3) say(this.item.name + " ELIMINATED!", false); // only announce final 3
             } else {
                 const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
                 this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
@@ -286,17 +289,18 @@ function loop() {
         // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
         const elapsed = Date.now() - roundStart;
         const progress = Math.min(1, elapsed / desiredDuration);
-        let dynamicSpeed = 1 + progress * 4; // ramps from 1x to ~5x
-        // when few balls remain, boost speed further
-        if (balls.length <= 5) dynamicSpeed *= 1.4;
-        if (balls.length <= 3) dynamicSpeed *= 1.6;
+        let dynamicSpeed = 1 + progress * 1.5; // ramps from 1x to ~2.5x for balance
+        // gentle boost speed gradually as balls get eliminated
+        if (balls.length <= 10) dynamicSpeed *= 1.05;
+        if (balls.length <= 5) dynamicSpeed *= 1.1;
+        if (balls.length <= 3) dynamicSpeed *= 1.15;
         const baseSlow = announced3 ? 0.8 : 1;
         slowMo = baseSlow * dynamicSpeed;
-        arenaRotation += 0.06 * dynamicSpeed;
-        // activate arena shrink to force eliminations when few remain
-        if (balls.length <= 5) {
-            arenaShrink += 0.9 * dynamicSpeed; // pixels per frame-ish
-            const maxShrink = RADIUS - 140; // don't shrink below this
+        arenaRotation += 0.02 * dynamicSpeed; // reduced spin for visibility of gap
+        // gentle arena shrink ONLY when exactly 2 balls remain
+        if (balls.length === 2) {
+            arenaShrink += 1.2 * dynamicSpeed; // gentle squeeze at final 2
+            const maxShrink = RADIUS - 120; // less aggressive cap
             arenaShrink = Math.min(arenaShrink, maxShrink);
         }
         balls.forEach(b => b.update());
