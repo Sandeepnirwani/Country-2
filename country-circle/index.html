@@ -3,411 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COUNTRY SPEED BATTLE PRO</title>
+    <title>COUNTRY SPEED BATTLE</title>
     <style>
-        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
+        :root { --gold:#ffcc00; --red:#ff3131; --dark-blue:#102a43; --dark:#000; }
+        * { box-sizing: border-box; }
         body {
-            margin:0; background:#0a0a0a; overflow:hidden;
+            margin:0; background:#000; overflow:hidden;
             display:flex; justify-content:center; align-items:center;
             font-family:'Arial Black', sans-serif; height: 100vh;
         }
         #stream {
             width:100vw; height:177.77vw;
             max-width:56.25vh; max-height:100vh;
-            position:relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
+            position:relative; overflow:hidden;
+            background: var(--dark-blue); /* DEEP DARK BLUE */
         }
         canvas { width:100%; height:100%; display:block; }
         
         .live {
-            position:absolute; top:30px; left:30px;
-            background:var(--red); padding:6px 15px;
+            position:absolute; top:20px; left:20px;
+            background:var(--red); padding:6px 12px;
             font-weight:900; color:white; border-radius: 4px; z-index: 10;
-            animation: blink 1s infinite;
+            font-size: 12px;
         }
-        @keyframes blink { 50% { opacity: 0.5; } }
 
         #scorecard { 
-            position:absolute; top:25px; right:25px; 
-            background:rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            color:white; padding:12px; border-radius:12px; z-index:15; 
-            border: 2px solid var(--neon); text-align: right;
+            position:absolute; top:20px; right:20px; 
+            background:rgba(0,0,0,0.6); color:white; 
+            padding:10px 15px; border-radius:8px; z-index:15; 
+            border: 1px solid rgba(255,255,255,0.2); text-align: right;
         }
-        .val { font-size:22px; color:var(--neon); text-shadow: 0 0 10px var(--neon); }
 
-        #cta {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            bottom: 110px; width: 90%; text-align: center;
-            color: white; font-size: 20px; font-weight: 900;
-            text-transform: uppercase; text-shadow: 2px 2px 5px #000; z-index: 10;
+        /* COMPACT WINNER CARD */
+        #topWinner {
+            position: absolute;
+            top: 80px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 12px;
+            z-index: 5; background: rgba(0,0,0,0.8);
+            padding: 8px 15px; border-radius: 40px;
+            border: 2px solid var(--gold);
+            min-width: 160px;
         }
+        #topWinner img {
+            width: 45px; height: 45px;
+            border-radius: 50%; border: 2px solid #fff;
+            object-fit: cover;
+        }
+        #topWinner .info { display: flex; flex-direction: column; }
+        #topWinner .title { font-size: 8px; color: var(--gold); letter-spacing: 1px; }
+        #topWinner .name { font-size: 16px; color: white; }
 
         #commentary { 
-            position:absolute; left:50%; transform:translateX(-50%); 
-            top: 45%; width: 85%; text-align: center;
-            color: #fff; font-size:32px; font-weight: 900;
-            z-index:20; opacity:0; transition: 0.3s;
-            text-shadow: 0 0 20px #00f2ff, 0 0 40px #000;
-            pointer-events: none;
+            position:absolute; left:50%; top:45%; transform:translate(-50%, -50%); 
+            width: 90%; text-align: center; color: white; font-size:60px; font-weight: 900;
+            z-index:20; opacity:0; transition: 0.2s; pointer-events: none;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
         }
 
         #ticker { 
             position:absolute; bottom:0; width:100%; height:60px; 
-            background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
+            background:var(--dark); display:flex; align-items:center; overflow:hidden; z-index:14;
         }
-        #tickerInner { display:flex; gap:30px; white-space:nowrap; animation: scrollTicker 80s linear infinite; will-change: transform; }
-        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-66.66%); } }
-        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; flex-shrink: 0; }
-        .tick img { width:40px; height:28px; border-radius:4px; }
+        #tickerInner { display:flex; gap:35px; white-space:nowrap; animation: scrollTicker 70s linear infinite; }
+        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
+        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 14px; font-weight: 700; }
+        .tick img { width:40px; height:26px; border-radius:2px; }
 
-        #startOverlay {
-            position: absolute; inset: 0; background: #000;
-            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #startBtn {
-            padding: 25px 60px; font-size: 28px; background: var(--neon);
-            color: black; border: none; border-radius: 50px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 0 20px var(--neon);
-        }
-
-        #winner {
+        /* WINNER OVERLAY - SMALLER SCALE */
+        #winnerOverlay {
             position:absolute; inset:0; display:none; 
             align-items:center; justify-content:center; flex-direction:column;
-            background:rgba(0,0,0,0.98); z-index:30;
+            background:rgba(0,0,0,0.9); z-index:100;
         }
-        #winner img { width:250px; height:250px; border-radius:50%; border:10px solid var(--gold); }
-        #winner h1 { color:var(--gold); font-size: 4rem; margin-top:20px; text-align:center; }
+        #winnerOverlay img { width:200px; height:200px; border-radius:50%; border:8px solid var(--gold); }
+        #winnerOverlay h1 { color:var(--gold); font-size:3.5rem; margin-top:15px; text-align:center; }
     </style>
 </head>
 <body>
 
-<div id="startOverlay"><button id="startBtn">START STREAM</button></div>
-
 <div id="stream">
-    <div class="live">LIVE</div>
+    <div class="live">● LIVE</div>
+    
     <div id="scorecard">
-        <div style="font-size:12px">REMAINING</div><div id="remaining" class="val">100</div>
+        <div style="font-size:10px; opacity:0.7">REMAINING</div>
+        <div id="remaining" style="font-size:32px; font-weight:900">0</div>
+    </div>
+
+    <div id="topWinner" style="display: none;">
+        <img id="lastWinnerImg" src="">
+        <div class="info">
+            <div class="title">LAST WINNER</div>
+            <div class="name" id="lastWinnerName">---</div>
+        </div>
     </div>
     
     <div id="commentary"></div>
-    <div id="cta">Comment your country name to win!</div>
-    
     <canvas id="c" width="1080" height="1920"></canvas>
     <div id="ticker"><div id="tickerInner"></div></div>
     
-    <div id="winner">
-        <h2 style="color:white; font-size: 1.5rem;">GLOBAL CHAMPION!</h2>
-        <img id="winnerImg" src="">
-        <h1 id="winnerName"></h1>
+    <div id="winnerOverlay">
+        <h2 style="color:white; letter-spacing:5px; font-size: 18px;">🏆 CHAMPION 🏆</h2>
+        <img id="champImg" src="">
+        <h1 id="champName"></h1>
     </div>
 </div>
 
 <script>
 const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
-const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
-const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
+const ctx = canvas.getContext("2d", { alpha: false });
+const CENTER = { x: 540, y: 1080 }, RADIUS = 460, BALL_R = 38, TOTAL = 60;
+const GAP_ANGLE = 0.55; 
 
-let balls = [], particles = [], exited = [];
-let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
-let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s for faster pace)
-let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
+let balls = [], arenaRotation = 0, state = "IDLE";
 
-// --- DYNAMIC BACKGROUND MUSIC ---
-function startBGM() {
-    const playBeat = () => {
-        if (!running) return;
-        
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(45, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            
-            osc.connect(gain).connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        } catch(e) {}
-
-        // Tempo increases as balls decrease
-        let tempo = balls.length > 20 ? 600 : 400;
-        if(balls.length <= 5) tempo = 300;
-        
-        setTimeout(playBeat, tempo);
-    };
-    playBeat();
-}
-
-// --- ORIGINAL SOUNDS ---
-function bloop() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=500;
-  o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.08);
-  g.gain.value=.08;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.1);
-}
-
-function elimSound() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=180;
-  o.frequency.exponentialRampToValueAtTime(60,audioCtx.currentTime+.25);
-  g.gain.value=.2;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.3);
-}
-
-// --- COMMENTARY ---
-const fillerLines = [
-    "Unbelievable physics on display!",
-    "Look at the speed of these countries!",
-    "Who is your favorite? Comment now!",
-    "The circle is spinning faster!",
-    "Massive collision in the center!",
-    "Pure chaos in the arena!",
-    "Will your country survive?",
-    "India is holding strong!",
-    "Look at that bounce!"
-];
-
-function say(t, important = false) {
-    const comEl = document.getElementById('commentary');
-    comEl.textContent = t; comEl.style.opacity = 1;
-    const duration = important ? 4000 : 2000;
-    setTimeout(() => { if(comEl.textContent === t) { comEl.style.opacity = 0; comEl.textContent = ''; } }, duration);
-    window.speechSynthesis.cancel(); // clear any queued speech for instant sync
-    const u = new SpeechSynthesisUtterance(t);
-    u.rate = 1.2; u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-}
-
-function randomCommentary() {
-    if (!running) return;
-    say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
-    setTimeout(randomCommentary, 6000 + Math.random() * 5000);
-}
-
-// --- DATA ---
 const countries = [
-    {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},{c:'fr', n:'FRANCE'},
-    {c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},{c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},
-    {c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},{c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'kr', n:'KOREA'},
-    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'SOUTH AFRICA'},{c:'ar', n:'ARGENTINA'},
-    {c:'co', n:'COLOMBIA'},{c:'ve', n:'VENEZUELA'},{c:'pe', n:'PERU'},{c:'cl', n:'CHILE'},{c:'pl', n:'POLAND'},
-    {c:'ua', n:'UKRAINE'},{c:'ro', n:'ROMANIA'},{c:'hu', n:'HUNGARY'},{c:'cz', n:'CZECHIA'},{c:'be', n:'BELGIUM'},
-    {c:'nl', n:'NETHERLANDS'},{c:'se', n:'SWEDEN'},{c:'no', n:'NORWAY'},{c:'fi', n:'FINLAND'},{c:'dk', n:'DENMARK'},
-    {c:'ie', n:'IRELAND'},{c:'pt', n:'PORTUGAL'},{c:'ch', n:'SWITZERLAND'},{c:'at', n:'AUSTRIA'},{c:'il', n:'ISRAEL'},
-    {c:'sa', n:'SAUDI ARABIA'},{c:'ir', n:'IRAN'},{c:'pk', n:'PAKISTAN'},{c:'bd', n:'BANGLADESH'},{c:'lk', n:'SRI LANKA'},
-    {c:'mm', n:'MYANMAR'},{c:'th', n:'THAILAND'},{c:'ph', n:'PHILIPPINES'},{c:'sg', n:'SINGAPORE'},{c:'my', n:'MALAYSIA'},
-    {c:'vn', n:'VIETNAM'},{c:'kh', n:'CAMBODIA'},{c:'la', n:'LAOS'},{c:'np', n:'NEPAL'},{c:'bt', n:'BHUTAN'},
-    {c:'mg', n:'MADAGASCAR'},{c:'ke', n:'KENYA'},{c:'ug', n:'UGANDA'},{c:'tz', n:'TANZANIA'},{c:'ma', n:'MOROCCO'},
-    {c:'dz', n:'ALGERIA'},{c:'tn', n:'TUNISIA'},{c:'ly', n:'LIBYA'},{c:'sd', n:'SUDAN'},{c:'et', n:'ETHIOPIA'},
-    {c:'gh', n:'GHANA'},{c:'ci', n:'IVORY COAST'},{c:'cm', n:'CAMEROON'},{c:'sn', n:'SENEGAL'},{c:'ml', n:'MALI'},
-    {c:'dz', n:'ALGERIA-2'},{c:'nz', n:'NEW ZEALAND'},{c:'cy', n:'CYPRUS'},{c:'gr', n:'GREECE'},{c:'si', n:'SLOVENIA'},
-    {c:'sk', n:'SLOVAKIA'},{c:'hr', n:'CROATIA'},{c:'rs', n:'SERBIA'},{c:'me', n:'MONTENEGRO'},{c:'mk', n:'NORTH MACEDONIA'},
-    {c:'al', n:'ALBANIA'},{c:'lv', n:'LATVIA'},{c:'lt', n:'LITHUANIA'},{c:'ee', n:'ESTONIA'},{c:'lu', n:'LUXEMBOURG'},
-    {c:'is', n:'ICELAND'},{c:'mt', n:'MALTA'},{c:'ad', n:'ANDORRA'},{c:'sm', n:'SAN MARINO'},{c:'va', n:'VATICAN'},
-    {c:'mc', n:'MONACO'},{c:'li', n:'LIECHTENSTEIN'},{c:'bd', n:'BANGLADESH-2'},{c:'do', n:'DOMINICAN REPUBLIC'},{c:'cr', n:'COSTA RICA'},
-    {c:'pa', n:'PANAMA'},{c:'uy', n:'URUGUAY'},{c:'py', n:'PARAGUAY'},{c:'bo', n:'BOLIVIA'},{c:'ec', n:'ECUADOR'},
-    {c:'bg', n:'BULGARIA'},{c:'by', n:'BELARUS'},{c:'kz', n:'KAZAKHSTAN'},{c:'uz', n:'UZBEKISTAN'},{c:'az', n:'AZERBAIJAN'},
-    {c:'ge', n:'GEORGIA'},{c:'am', n:'ARMENIA'},{c:'tn', n:'TUNISIA-2'},{c:'jo', n:'JORDAN'},{c:'lb', n:'LEBANON'}
+    {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},
+    {c:'fr', n:'FRANCE'},{c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},
+    {c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},{c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},
+    {c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'id', n:'INDONESIA'},{c:'kr', n:'KOREA'}
 ];
 
-const flags = countries.map(x => {
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.src = `https://flagcdn.com/w160/${x.c.toLowerCase()}.png`;
-    return { name: x.n, img };
+const flagPool = [];
+for(let i=0; i<TOTAL; i++) {
+    const d = countries[i % countries.length];
+    const img = new Image();
+    img.src = `https://flagcdn.com/w160/${d.c}.png`;
+    flagPool.push({ name: d.n, img, code: d.c });
+}
+
+const ticker = document.getElementById('tickerInner');
+[...flagPool, ...flagPool].forEach(f => {
+    const d = document.createElement('div');
+    d.className = 'tick';
+    d.innerHTML = `<img src="${f.img.src}"> <span>${f.name}</span>`;
+    ticker.appendChild(d);
 });
 
-const tickerInner = document.getElementById('tickerInner');
-// Triple flags for seamless infinite scroll
-const allFlags = [...flags, ...flags, ...flags];
-allFlags.forEach(f => {
-    tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
-});
+function say(t) {
+    const el = document.getElementById('commentary');
+    el.textContent = t; el.style.opacity = 1;
+    setTimeout(() => el.style.opacity = 0, 2000);
+    const u = new SpeechSynthesisUtterance(t);
+    u.rate = 1.3; window.speechSynthesis.speak(u);
+}
 
 class Ball {
-    constructor(item) {
-        const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
-        this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
-        this.vx = (Math.random()-0.5)*40; this.vy = (Math.random()-0.5)*40;
-        this.item = item; this.out = false;
+    constructor(meta, i) {
+        this.meta = meta;
+        this.x = CENTER.x + (Math.random()-0.5)*300;
+        this.y = -100 - (i * 70);
+        this.vx = (Math.random()-0.5)*12;
+        this.vy = 0;
+        this.out = false;
     }
+
     update() {
-        this.x += this.vx * slowMo; this.y += this.vy * slowMo;
-        const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
-        const effectiveRadius = RADIUS - arenaShrink;
-        if (d > effectiveRadius - BALL_R) {
-            let ang = Math.atan2(dy, dx) - arenaRotation;
-            while(ang < -Math.PI) ang += Math.PI*2;
-            while(ang > Math.PI) ang -= Math.PI*2;
-            if (ang > -GAP_ANGLE && ang < GAP_ANGLE) {
-                this.out = true;
-                for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
-                elimSound();
-                if(balls.length <= 3) say(this.item.name + " ELIMINATED!", false); // only announce final 3
-            } else {
-                const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
-                this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
-                this.x = CENTER.x + nx*(effectiveRadius-BALL_R-2); this.y = CENTER.y + ny*(effectiveRadius-BALL_R-2);
-                bloop();
+        if (state === "FILL" || state === "JUGGLE") {
+            this.vy += 0.8; this.vx *= 0.98;
+            this.x += this.vx; this.y += this.vy;
+            this.collide(0.4);
+        } else if (state === "BATTLE") {
+            this.x += this.vx; this.y += this.vy;
+            this.collide(1.0);
+        }
+
+        for(let o of balls) {
+            if(o === this || o.out) continue;
+            const dx = o.x-this.x, dy = o.y-this.y, dist = Math.hypot(dx,dy);
+            if(dist < BALL_R*2) {
+                const nx = dx/dist, ny = dy/dist, overlap = BALL_R*2-dist;
+                this.x -= nx*overlap*0.5; this.y -= ny*overlap*0.5;
+                o.x += nx*overlap*0.5; o.y += ny*overlap*0.5;
             }
         }
     }
+
+    collide(e) {
+        const dx = this.x-CENTER.x, dy = this.y-CENTER.y, d = Math.hypot(dx,dy);
+        if(d > RADIUS - BALL_R) {
+            let ang = Math.atan2(dy, dx) - arenaRotation;
+            while(ang < -Math.PI) ang += Math.PI*2;
+            while(ang > Math.PI) ang -= Math.PI*2;
+            if(state === "BATTLE" && Math.abs(ang) < GAP_ANGLE) {
+                this.out = true; return;
+            }
+            const nx = dx/d, ny = dy/d, dot = this.vx*nx + this.vy*ny;
+            this.vx = (this.vx - 2*dot*nx)*e;
+            this.vy = (this.vy - 2*dot*ny)*e;
+            this.x = CENTER.x + nx*(RADIUS-BALL_R);
+            this.y = CENTER.y + ny*(RADIUS-BALL_R);
+        }
+    }
+
     draw() {
-        ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, BALL_R, 0, Math.PI*2); ctx.clip();
-        if(this.item.img.complete) ctx.drawImage(this.item.img, this.x-BALL_R, this.y-BALL_R, BALL_R*2, BALL_R*2);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.beginPath(); ctx.arc(0,0,BALL_R,0,Math.PI*2); ctx.clip();
+        ctx.drawImage(this.meta.img, -BALL_R, -BALL_R, BALL_R*2, BALL_R*2);
         ctx.restore();
     }
 }
 
-function start() {
-    balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
-    roundStart = Date.now();
-    arenaShrink = 0;
-    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i]));
-    say("THE RACE BEGINS!", true);
-    setTimeout(randomCommentary, 6000);
-    startBGM();
+async function startLoop() {
+    state = "FILL"; balls = [];
+    document.getElementById("winnerOverlay").style.display = "none";
+    for(let i=0; i<TOTAL; i++) {
+        balls.push(new Ball(flagPool[i], i));
+        document.getElementById('remaining').textContent = balls.length;
+        await new Promise(r => setTimeout(r, 40));
+    }
+    state = "JUGGLE"; await new Promise(r => setTimeout(r, 1200));
+    say("START!"); state = "BATTLE";
+    balls.forEach(b => { b.vx = (Math.random()-0.5)*35; b.vy = (Math.random()-0.5)*35; });
 }
 
-function loop() {
-    const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(0.25, '#764ba2');
-    gradient.addColorStop(0.5, '#f093fb');
-    gradient.addColorStop(0.75, '#4facfe');
-    gradient.addColorStop(1, '#667eea');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1080, 1920);
-    if (running) {
-        // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
-        const elapsed = Date.now() - roundStart;
-        const progress = Math.min(1, elapsed / desiredDuration);
-        let dynamicSpeed = 1 + progress * 1.5; // ramps from 1x to ~2.5x for balance
-        // gentle boost speed gradually as balls get eliminated
-        if (balls.length <= 10) dynamicSpeed *= 1.05;
-        if (balls.length <= 5) dynamicSpeed *= 1.1;
-        if (balls.length <= 3) dynamicSpeed *= 1.15;
-        const baseSlow = announced3 ? 0.8 : 1;
-        slowMo = baseSlow * dynamicSpeed;
-        arenaRotation += 0.02 * dynamicSpeed; // reduced spin for visibility of gap
-        // gentle arena shrink ONLY when exactly 2 balls remain
-        if (balls.length === 2) {
-            arenaShrink += 1.2 * dynamicSpeed; // gentle squeeze at final 2
-            const maxShrink = RADIUS - 120; // less aggressive cap
-            arenaShrink = Math.min(arenaShrink, maxShrink);
-        }
-        balls.forEach(b => b.update());
+function render() {
+    ctx.fillStyle = "#102a43"; 
+    ctx.fillRect(0,0,1080,1920);
+
+    if(state === "BATTLE") {
+        arenaRotation += 0.035;
         balls = balls.filter(b => !b.out);
-        if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL THREE COUNTRIES!", true); }
-        if (balls.length === 1) {
-            running = false;
-            const w = balls[0].item;
-            document.getElementById("winnerImg").src = w.img.src;
-            document.getElementById("winnerName").textContent = w.name;
-            document.getElementById("winner").style.display = "flex";
-            say("CONGRATULATIONS TO " + w.name + "!", true);
-            setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 7000);
+        document.getElementById('remaining').textContent = balls.length;
+        if(balls.length === 1) {
+            state = "IDLE";
+            const w = balls[0].meta;
+            document.getElementById("champImg").src = w.img.src;
+            document.getElementById("champName").textContent = w.name;
+            document.getElementById("winnerOverlay").style.display = "flex";
+            document.getElementById("topWinner").style.display = "flex";
+            document.getElementById("lastWinnerImg").src = w.img.src;
+            document.getElementById("lastWinnerName").textContent = w.name;
+            say(w.name + " WINS!");
+            setTimeout(startLoop, 6000);
         }
     }
-    
-    // Arena Ring - FIXED DRAWING
-    ctx.save(); 
-    ctx.translate(CENTER.x, CENTER.y); 
+
+    // Black Arena Ring
+    ctx.save();
+    ctx.translate(CENTER.x, CENTER.y);
     ctx.rotate(arenaRotation);
-    ctx.strokeStyle = "#00f2ff"; 
-    ctx.lineWidth = 25; 
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = "#00f2ff";
-    ctx.beginPath(); 
-    // draw ring with a visible gap that matches the elimination window
-    const drawRadius = Math.max(120, RADIUS - arenaShrink);
-    ctx.arc(0, 0, drawRadius, GAP_ANGLE, -GAP_ANGLE);
-    ctx.stroke(); 
+    ctx.strokeStyle = "#000"; ctx.lineWidth = 25; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(0,0,RADIUS, GAP_ANGLE, -GAP_ANGLE); ctx.stroke();
     ctx.restore();
-    
-    balls.forEach(b => b.draw());
-    // Clean up old particles to prevent memory buildup
-    if(particles.length > 500) particles = particles.slice(-250); // keep only recent ones
-    particles.forEach((p, i) => {
-        p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
-        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
-        if(p.l<=0) particles.splice(i,1);
-    });
-    ctx.globalAlpha=1;
-    document.getElementById('remaining').textContent = balls.length;
-    // Periodic cleanup to prevent memory leaks on long streams
-    if(Math.random() < 0.01) {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
-    }
-    requestAnimationFrame(loop);
+
+    balls.forEach(b => { b.update(); b.draw(); });
+    requestAnimationFrame(render);
 }
 
-document.getElementById("startBtn").onclick = () => {
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById("startOverlay").style.display = "none";
-        start();
-    } catch(e) { console.log(e); }
-};
-
-// Enhanced auto-start: try muted <audio> autoplay to prime media, connect it to AudioContext if possible,
-// and attach a one-time user-gesture resume if autoplay is blocked.
-(async function tryAutoStart(){
-    try {
-        // Create short muted audio and try to play it (muted autoplay usually allowed)
-        let mutedAudio = document.createElement('audio');
-        mutedAudio.muted = true; mutedAudio.autoplay = true; mutedAudio.playsInline = true;
-        // a tiny silent WAV (very short) to avoid external network requests
-        mutedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
-        document.body.appendChild(mutedAudio);
-        try { await mutedAudio.play(); } catch(e) { /* muted autoplay may still be blocked */ }
-
-        // Try to create and resume audio context
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        try {
-            const srcNode = audioCtx.createMediaElementSource(mutedAudio);
-            const g = audioCtx.createGain(); g.gain.value = 0;
-            srcNode.connect(g).connect(audioCtx.destination);
-        } catch(e) { /* ignore if creation fails due to cross-origin */ }
-
-        if (audioCtx.state === 'suspended') {
-            try { await audioCtx.resume(); } catch(e) {}
-        }
-
-        if (audioCtx.state === 'running') {
-            document.getElementById("startOverlay").style.display = "none";
-            start();
-        } else {
-            // Autoplay blocked — show overlay and attach a one-time click handler to resume
-            console.log('Autoplay blocked; waiting for user gesture to start.');
-            const overlay = document.getElementById("startOverlay");
-            overlay.style.display = "flex";
-            overlay.querySelector('#startBtn').textContent = 'Tap to START';
-            const resumeHandler = async () => {
-                try {
-                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    try { await audioCtx.resume(); } catch(e) {}
-                    document.getElementById("startOverlay").style.display = "none";
-                    start();
-                } catch(e) { console.log(e); }
-                document.body.removeEventListener('click', resumeHandler);
-            };
-            document.body.addEventListener('click', resumeHandler);
-        }
-    } catch(e) {
-        audioCtx = null;
-    }
-})();
-
-requestAnimationFrame(loop);
+window.onload = () => { startLoop(); render(); };
 </script>
 </body>
 </html>
