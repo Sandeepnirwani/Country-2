@@ -109,7 +109,7 @@ const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
 
 let balls = [], particles = [], exited = [];
 let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
-let roundStart = 0, desiredDuration = 50000; // desired round duration in ms (~50s for balance)
+let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s for faster pace)
 let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
 
 // --- DYNAMIC BACKGROUND MUSIC ---
@@ -179,7 +179,8 @@ const fillerLines = [
 function say(t, important = false) {
     const comEl = document.getElementById('commentary');
     comEl.textContent = t; comEl.style.opacity = 1;
-    setTimeout(() => { if(comEl.textContent === t) comEl.style.opacity = 0; }, important ? 4000 : 2000);
+    const duration = important ? 4000 : 2000;
+    setTimeout(() => { if(comEl.textContent === t) { comEl.style.opacity = 0; comEl.textContent = ''; } }, duration);
     window.speechSynthesis.cancel(); // clear any queued speech for instant sync
     const u = new SpeechSynthesisUtterance(t);
     u.rate = 1.2; u.pitch = 1.0;
@@ -187,9 +188,9 @@ function say(t, important = false) {
 }
 
 function randomCommentary() {
-    if (!running || balls.length <= 3) return;
+    if (!running) return;
     say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
-    setTimeout(randomCommentary, 12000 + Math.random() * 8000);
+    setTimeout(randomCommentary, 6000 + Math.random() * 5000);
 }
 
 // --- DATA ---
