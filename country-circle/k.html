@@ -3,98 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COUNTRY SPEED BATTLE MINI</title>
+    <title>COUNTRY SPEED BATTLE PRO</title>
     <style>
-        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; --green:#00ff88; }
+        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
         body {
-            margin:0; background:#000; overflow:hidden;
+            margin:0; background:#0a0a0a; overflow:hidden;
             display:flex; justify-content:center; align-items:center;
             font-family:'Arial Black', sans-serif; height: 100vh;
         }
         #stream {
             width:100vw; height:177.77vw;
             max-width:56.25vh; max-height:100vh;
-            position:relative; background: radial-gradient(circle, #121225 0%, #000 100%);
+            position:relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
         }
         canvas { width:100%; height:100%; display:block; }
         
         .live {
-            position:absolute; top:20px; left:20px;
-            background:var(--red); padding:4px 10px; font-size: 14px;
+            position:absolute; top:30px; left:30px;
+            background:var(--red); padding:6px 15px;
             font-weight:900; color:white; border-radius: 4px; z-index: 10;
+            animation: blink 1s infinite;
         }
+        @keyframes blink { 50% { opacity: 0.5; } }
 
-        /* --- COMPACT RIGHT DASHBOARD --- */
-        #dashboard { 
-            position:absolute; top:20px; right:20px; 
-            background:rgba(0,0,0,0.8); border: 1.5px solid var(--neon);
-            color:white; border-radius:8px; z-index:15; width: 70px;
-            display: flex; flex-direction: column; align-items: center;
+        #scorecard { 
+            position:absolute; top:25px; right:25px; 
+            background:rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            color:white; padding:12px; border-radius:12px; z-index:15; 
+            border: 2px solid var(--neon); text-align: right;
         }
-        
-        #rem-box {
-            width: 100%; background: var(--neon); color: #000;
-            text-align: center; padding: 5px 0; border-radius: 6px 6px 0 0;
-        }
-        #remaining { font-size: 24px; font-weight: 900; }
+        .val { font-size:22px; color:var(--neon); text-shadow: 0 0 10px var(--neon); }
 
-        #history-box { padding: 5px 0; display: flex; flex-direction: column; gap: 4px; }
-        .win-entry { display: flex; justify-content: center; }
-        .win-entry img { width: 35px; height: 24px; border-radius: 2px; border: 1px solid #333; }
+        #cta {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            bottom: 110px; width: 90%; text-align: center;
+            color: white; font-size: 20px; font-weight: 900;
+            text-transform: uppercase; text-shadow: 2px 2px 5px #000; z-index: 10;
+        }
 
         #commentary { 
             position:absolute; left:50%; transform:translateX(-50%); 
-            top: 40%; width: 80%; text-align: center;
+            top: 45%; width: 85%; text-align: center;
             color: #fff; font-size:32px; font-weight: 900;
             z-index:20; opacity:0; transition: 0.3s;
-            text-shadow: 0 0 15px #000; pointer-events: none;
+            text-shadow: 0 0 20px #00f2ff, 0 0 40px #000;
+            pointer-events: none;
         }
 
         #ticker { 
-            position:absolute; bottom:0; width:100%; height:50px; 
-            background:rgba(0,0,0,0.9); display:flex; align-items:center; overflow:hidden; z-index:14;
+            position:absolute; bottom:0; width:100%; height:60px; 
+            background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
         }
-        #tickerInner { display:flex; gap:20px; white-space:nowrap; animation: scrollTicker 60s linear infinite; }
+        #tickerInner { display:flex; gap:30px; white-space:nowrap; animation: scrollTicker 80s linear infinite; will-change: transform; }
         @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-66.66%); } }
-        .tick { display:flex; align-items:center; gap:8px; color:white; font-size: 16px; }
-        .tick img { width:32px; height:22px; border-radius:3px; }
+        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; flex-shrink: 0; }
+        .tick img { width:40px; height:28px; border-radius:4px; }
 
         #startOverlay {
             position: absolute; inset: 0; background: #000;
-            z-index: 100; display: flex; justify-content: center; align-items: center;
+            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         #startBtn {
-            padding: 20px 40px; font-size: 22px; background: var(--green);
-            color: black; border: none; border-radius: 40px; font-weight: 900; cursor: pointer;
+            padding: 25px 60px; font-size: 28px; background: var(--neon);
+            color: black; border: none; border-radius: 50px; font-weight: 900; cursor: pointer;
+            box-shadow: 0 0 20px var(--neon);
         }
 
         #winner {
             position:absolute; inset:0; display:none; 
             align-items:center; justify-content:center; flex-direction:column;
-            background:rgba(0,0,0,0.95); z-index:30;
+            background:rgba(0,0,0,0.98); z-index:30;
         }
-        #winner img { width:200px; height:200px; border-radius:50%; border:8px solid var(--gold); }
-        #winner h1 { color:var(--gold); font-size: 3.5rem; margin-top:15px; text-align:center; }
+        #winner img { width:250px; height:250px; border-radius:50%; border:10px solid var(--gold); }
+        #winner h1 { color:var(--gold); font-size: 4rem; margin-top:20px; text-align:center; }
     </style>
 </head>
 <body>
 
-<div id="startOverlay"><button id="startBtn">START</button></div>
+<div id="startOverlay"><button id="startBtn">START STREAM</button></div>
 
 <div id="stream">
     <div class="live">LIVE</div>
-    
-    <div id="dashboard">
-        <div id="rem-box"><div id="remaining">100</div></div>
-        <div id="history-box" id="histEntries">
-            </div>
+    <div id="scorecard">
+        <div style="font-size:12px">REMAINING</div><div id="remaining" class="val">100</div>
     </div>
-
+    
     <div id="commentary"></div>
+    <div id="cta">Comment your country name to win!</div>
+    
     <canvas id="c" width="1080" height="1920"></canvas>
     <div id="ticker"><div id="tickerInner"></div></div>
     
     <div id="winner">
+        <h2 style="color:white; font-size: 1.5rem;">GLOBAL CHAMPION!</h2>
         <img id="winnerImg" src="">
         <h1 id="winnerName"></h1>
     </div>
@@ -103,82 +104,159 @@
 <script>
 const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
-const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 32, TOTAL = 100;
-let GAP_ANGLE = 0.8;
+const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
+const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
 
-let balls = [], particles = [], running = false, phase = "IDLE"; 
-let slowMo = 1, announced3 = false, arenaRotation = -Math.PI/2, audioCtx;
-let roundStart = 0, desiredDuration = 40000, arenaShrink = 0;
-let winnerHistory = [];
+let balls = [], particles = [], exited = [];
+let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
+let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s for faster pace)
+let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
 
+// --- DYNAMIC BACKGROUND MUSIC ---
+function startBGM() {
+    const playBeat = () => {
+        if (!running) return;
+        
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(45, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) {}
+
+        // Tempo increases as balls decrease
+        let tempo = balls.length > 20 ? 600 : 400;
+        if(balls.length <= 5) tempo = 300;
+        
+        setTimeout(playBeat, tempo);
+    };
+    playBeat();
+}
+
+// --- ORIGINAL SOUNDS ---
+function bloop() {
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.frequency.value=500;
+  o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.08);
+  g.gain.value=.08;
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.1);
+}
+
+function elimSound() {
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.frequency.value=180;
+  o.frequency.exponentialRampToValueAtTime(60,audioCtx.currentTime+.25);
+  g.gain.value=.2;
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.3);
+}
+
+// --- COMMENTARY ---
+const fillerLines = [
+    "Unbelievable physics on display!",
+    "Look at the speed of these countries!",
+    "Who is your favorite? Comment now!",
+    "The circle is spinning faster!",
+    "Massive collision in the center!",
+    "Pure chaos in the arena!",
+    "Will your country survive?",
+    "India is holding strong!",
+    "Look at that bounce!"
+];
+
+function say(t, important = false) {
+    const comEl = document.getElementById('commentary');
+    comEl.textContent = t; comEl.style.opacity = 1;
+    const duration = important ? 4000 : 2000;
+    setTimeout(() => { if(comEl.textContent === t) { comEl.style.opacity = 0; comEl.textContent = ''; } }, duration);
+    window.speechSynthesis.cancel(); // clear any queued speech for instant sync
+    const u = new SpeechSynthesisUtterance(t);
+    u.rate = 1.2; u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+}
+
+function randomCommentary() {
+    if (!running) return;
+    say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
+    setTimeout(randomCommentary, 6000 + Math.random() * 5000);
+}
+
+// --- DATA ---
 const countries = [
     {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},{c:'fr', n:'FRANCE'},
     {c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},{c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},
     {c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},{c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'kr', n:'KOREA'},
-    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'S. AFRICA'},{c:'ar', n:'ARGENTINA'}
+    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'SOUTH AFRICA'},{c:'ar', n:'ARGENTINA'},
+    {c:'co', n:'COLOMBIA'},{c:'ve', n:'VENEZUELA'},{c:'pe', n:'PERU'},{c:'cl', n:'CHILE'},{c:'pl', n:'POLAND'},
+    {c:'ua', n:'UKRAINE'},{c:'ro', n:'ROMANIA'},{c:'hu', n:'HUNGARY'},{c:'cz', n:'CZECHIA'},{c:'be', n:'BELGIUM'},
+    {c:'nl', n:'NETHERLANDS'},{c:'se', n:'SWEDEN'},{c:'no', n:'NORWAY'},{c:'fi', n:'FINLAND'},{c:'dk', n:'DENMARK'},
+    {c:'ie', n:'IRELAND'},{c:'pt', n:'PORTUGAL'},{c:'ch', n:'SWITZERLAND'},{c:'at', n:'AUSTRIA'},{c:'il', n:'ISRAEL'},
+    {c:'sa', n:'SAUDI ARABIA'},{c:'ir', n:'IRAN'},{c:'pk', n:'PAKISTAN'},{c:'bd', n:'BANGLADESH'},{c:'lk', n:'SRI LANKA'},
+    {c:'mm', n:'MYANMAR'},{c:'th', n:'THAILAND'},{c:'ph', n:'PHILIPPINES'},{c:'sg', n:'SINGAPORE'},{c:'my', n:'MALAYSIA'},
+    {c:'vn', n:'VIETNAM'},{c:'kh', n:'CAMBODIA'},{c:'la', n:'LAOS'},{c:'np', n:'NEPAL'},{c:'bt', n:'BHUTAN'},
+    {c:'mg', n:'MADAGASCAR'},{c:'ke', n:'KENYA'},{c:'ug', n:'UGANDA'},{c:'tz', n:'TANZANIA'},{c:'ma', n:'MOROCCO'},
+    {c:'dz', n:'ALGERIA'},{c:'tn', n:'TUNISIA'},{c:'ly', n:'LIBYA'},{c:'sd', n:'SUDAN'},{c:'et', n:'ETHIOPIA'},
+    {c:'gh', n:'GHANA'},{c:'ci', n:'IVORY COAST'},{c:'cm', n:'CAMEROON'},{c:'sn', n:'SENEGAL'},{c:'ml', n:'MALI'},
+    {c:'dz', n:'ALGERIA-2'},{c:'nz', n:'NEW ZEALAND'},{c:'cy', n:'CYPRUS'},{c:'gr', n:'GREECE'},{c:'si', n:'SLOVENIA'},
+    {c:'sk', n:'SLOVAKIA'},{c:'hr', n:'CROATIA'},{c:'rs', n:'SERBIA'},{c:'me', n:'MONTENEGRO'},{c:'mk', n:'NORTH MACEDONIA'},
+    {c:'al', n:'ALBANIA'},{c:'lv', n:'LATVIA'},{c:'lt', n:'LITHUANIA'},{c:'ee', n:'ESTONIA'},{c:'lu', n:'LUXEMBOURG'},
+    {c:'is', n:'ICELAND'},{c:'mt', n:'MALTA'},{c:'ad', n:'ANDORRA'},{c:'sm', n:'SAN MARINO'},{c:'va', n:'VATICAN'},
+    {c:'mc', n:'MONACO'},{c:'li', n:'LIECHTENSTEIN'},{c:'bd', n:'BANGLADESH-2'},{c:'do', n:'DOMINICAN REPUBLIC'},{c:'cr', n:'COSTA RICA'},
+    {c:'pa', n:'PANAMA'},{c:'uy', n:'URUGUAY'},{c:'py', n:'PARAGUAY'},{c:'bo', n:'BOLIVIA'},{c:'ec', n:'ECUADOR'},
+    {c:'bg', n:'BULGARIA'},{c:'by', n:'BELARUS'},{c:'kz', n:'KAZAKHSTAN'},{c:'uz', n:'UZBEKISTAN'},{c:'az', n:'AZERBAIJAN'},
+    {c:'ge', n:'GEORGIA'},{c:'am', n:'ARMENIA'},{c:'tn', n:'TUNISIA-2'},{c:'jo', n:'JORDAN'},{c:'lb', n:'LEBANON'}
 ];
-while(countries.length < 100) countries.push(countries[Math.floor(Math.random()*countries.length)]);
 
-const flags = countries.slice(0, 100).map(x => {
+const flags = countries.map(x => {
     const img = new Image(); img.crossOrigin = "anonymous";
     img.src = `https://flagcdn.com/w160/${x.c.toLowerCase()}.png`;
     return { name: x.n, img };
 });
 
 const tickerInner = document.getElementById('tickerInner');
-flags.slice(0, 30).forEach(f => {
+// Triple flags for seamless infinite scroll
+const allFlags = [...flags, ...flags, ...flags];
+allFlags.forEach(f => {
     tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
 });
 
-function say(t) {
-    const comEl = document.getElementById('commentary');
-    comEl.textContent = t; comEl.style.opacity = 1;
-    setTimeout(() => { if(comEl.textContent === t) comEl.style.opacity = 0; }, 2000);
-}
-
-function updateHistory(winner) {
-    winnerHistory.unshift(winner);
-    if(winnerHistory.length > 4) winnerHistory.pop();
-    const container = document.getElementById('history-box');
-    container.innerHTML = winnerHistory.map(w => `
-        <div class="win-entry"><img src="${w.img.src}"></div>
-    `).join('');
-}
-
 class Ball {
-    constructor(item, index) {
-        this.item = item; this.index = index; this.reset();
-    }
-    reset() {
-        this.x = CENTER.x + (Math.random() - 0.5) * 20; 
-        this.y = -300 - (this.index * 120); 
-        this.vx = 0; this.vy = 18; // Very smooth, steady entry
-        this.out = false; this.isInArena = false;
+    constructor(item) {
+        const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
+        this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
+        this.vx = (Math.random()-0.5)*40; this.vy = (Math.random()-0.5)*40;
+        this.item = item; this.out = false;
     }
     update() {
-        this.x += this.vx * slowMo;
-        this.y += this.vy * slowMo;
+        this.x += this.vx * slowMo; this.y += this.vy * slowMo;
         const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
-        const currentR = RADIUS - arenaShrink;
-
-        if (!this.isInArena && d < currentR - BALL_R) {
-            this.isInArena = true;
-            this.vx = (Math.random() - 0.5) * 25; this.vy = (Math.random() - 0.5) * 25;
-        }
-
-        if (this.isInArena) {
-            if (d > currentR - BALL_R) {
-                let ang = Math.atan2(dy, dx) - arenaRotation;
-                while(ang < -Math.PI) ang += Math.PI*2;
-                while(ang > Math.PI) ang -= Math.PI*2;
-                if (phase === "BATTLE" && ang > -GAP_ANGLE && ang < GAP_ANGLE) {
-                    this.out = true;
-                } else {
-                    const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
-                    this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
-                    this.x = CENTER.x + nx*(currentR-BALL_R-2);
-                    this.y = CENTER.y + ny*(currentR-BALL_R-2);
-                }
+        const effectiveRadius = RADIUS - arenaShrink;
+        if (d > effectiveRadius - BALL_R) {
+            let ang = Math.atan2(dy, dx) - arenaRotation;
+            while(ang < -Math.PI) ang += Math.PI*2;
+            while(ang > Math.PI) ang -= Math.PI*2;
+            if (ang > -GAP_ANGLE && ang < GAP_ANGLE) {
+                this.out = true;
+                for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
+                elimSound();
+                if(balls.length <= 3) say(this.item.name + " ELIMINATED!", false); // only announce final 3
+            } else {
+                const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
+                this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
+                this.x = CENTER.x + nx*(effectiveRadius-BALL_R-2); this.y = CENTER.y + ny*(effectiveRadius-BALL_R-2);
+                bloop();
             }
         }
     }
@@ -190,62 +268,145 @@ class Ball {
 }
 
 function start() {
-    balls = []; announced3 = false; running = true;
-    arenaShrink = 0; arenaRotation = -Math.PI/2;
-    GAP_ANGLE = 0.8; phase = "ENTRY"; 
-    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i], i));
+    balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
+    roundStart = Date.now();
+    arenaShrink = 0;
+    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i]));
+    say("THE RACE BEGINS!", true);
+    setTimeout(randomCommentary, 6000);
+    startBGM();
 }
 
 function loop() {
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 1080, 1920);
+    const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(0.25, '#764ba2');
+    gradient.addColorStop(0.5, '#f093fb');
+    gradient.addColorStop(0.75, '#4facfe');
+    gradient.addColorStop(1, '#667eea');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 1080, 1920);
     if (running) {
-        if (phase === "ENTRY") {
-            balls.forEach(b => b.update());
-            if (balls.every(b => b.isInArena)) {
-                phase = "BATTLE"; GAP_ANGLE = 0.5;
-                roundStart = Date.now();
-                say("BATTLE START!");
-            }
-        } else if (phase === "BATTLE") {
-            const elapsed = Date.now() - roundStart;
-            const progress = Math.min(1, elapsed / desiredDuration);
-            let dynamicSpeed = 1.3 + progress * 1.5; 
-            slowMo = (announced3 ? 0.7 : 1) * dynamicSpeed;
-            arenaRotation += 0.025 * dynamicSpeed;
-            if (balls.length === 2) arenaShrink = Math.min(arenaShrink + 1.2, RADIUS - 120);
-            balls.forEach(b => b.update());
-            balls = balls.filter(b => !b.out);
-            if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL 3!"); }
-            if (balls.length === 1) {
-                running = false; phase = "IDLE";
-                const w = balls[0].item;
-                updateHistory(w);
-                document.getElementById("winnerImg").src = w.img.src;
-                document.getElementById("winnerName").textContent = w.name;
-                document.getElementById("winner").style.display = "flex";
-                setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 5000);
-            }
+        // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
+        const elapsed = Date.now() - roundStart;
+        const progress = Math.min(1, elapsed / desiredDuration);
+        let dynamicSpeed = 1 + progress * 1.5; // ramps from 1x to ~2.5x for balance
+        // gentle boost speed gradually as balls get eliminated
+        if (balls.length <= 10) dynamicSpeed *= 1.05;
+        if (balls.length <= 5) dynamicSpeed *= 1.1;
+        if (balls.length <= 3) dynamicSpeed *= 1.15;
+        const baseSlow = announced3 ? 0.8 : 1;
+        slowMo = baseSlow * dynamicSpeed;
+        arenaRotation += 0.02 * dynamicSpeed; // reduced spin for visibility of gap
+        // gentle arena shrink ONLY when exactly 2 balls remain
+        if (balls.length === 2) {
+            arenaShrink += 1.2 * dynamicSpeed; // gentle squeeze at final 2
+            const maxShrink = RADIUS - 120; // less aggressive cap
+            arenaShrink = Math.min(arenaShrink, maxShrink);
+        }
+        balls.forEach(b => b.update());
+        balls = balls.filter(b => !b.out);
+        if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL THREE COUNTRIES!", true); }
+        if (balls.length === 1) {
+            running = false;
+            const w = balls[0].item;
+            document.getElementById("winnerImg").src = w.img.src;
+            document.getElementById("winnerName").textContent = w.name;
+            document.getElementById("winner").style.display = "flex";
+            say("CONGRATULATIONS TO " + w.name + "!", true);
+            setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 7000);
         }
     }
     
+    // Arena Ring - FIXED DRAWING
     ctx.save(); 
-    ctx.translate(CENTER.x, CENTER.y); ctx.rotate(arenaRotation);
-    ctx.strokeStyle = phase === "ENTRY" ? "#00ff88" : "#00f2ff"; 
-    ctx.lineWidth = 30; ctx.beginPath(); 
-    const r = RADIUS - arenaShrink;
-    ctx.arc(0, 0, r, GAP_ANGLE, -GAP_ANGLE);
+    ctx.translate(CENTER.x, CENTER.y); 
+    ctx.rotate(arenaRotation);
+    ctx.strokeStyle = "#00f2ff"; 
+    ctx.lineWidth = 25; 
+    ctx.shadowBlur = 20; 
+    ctx.shadowColor = "#00f2ff";
+    ctx.beginPath(); 
+    // draw ring with a visible gap that matches the elimination window
+    const drawRadius = Math.max(120, RADIUS - arenaShrink);
+    ctx.arc(0, 0, drawRadius, GAP_ANGLE, -GAP_ANGLE);
     ctx.stroke(); 
     ctx.restore();
     
     balls.forEach(b => b.draw());
+    // Clean up old particles to prevent memory buildup
+    if(particles.length > 500) particles = particles.slice(-250); // keep only recent ones
+    particles.forEach((p, i) => {
+        p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
+        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
+        if(p.l<=0) particles.splice(i,1);
+    });
+    ctx.globalAlpha=1;
     document.getElementById('remaining').textContent = balls.length;
+    // Periodic cleanup to prevent memory leaks on long streams
+    if(Math.random() < 0.01) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
     requestAnimationFrame(loop);
 }
 
 document.getElementById("startBtn").onclick = () => {
-    document.getElementById("startOverlay").style.display = "none";
-    start();
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById("startOverlay").style.display = "none";
+        start();
+    } catch(e) { console.log(e); }
 };
+
+// Enhanced auto-start: try muted <audio> autoplay to prime media, connect it to AudioContext if possible,
+// and attach a one-time user-gesture resume if autoplay is blocked.
+(async function tryAutoStart(){
+    try {
+        // Create short muted audio and try to play it (muted autoplay usually allowed)
+        let mutedAudio = document.createElement('audio');
+        mutedAudio.muted = true; mutedAudio.autoplay = true; mutedAudio.playsInline = true;
+        // a tiny silent WAV (very short) to avoid external network requests
+        mutedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
+        document.body.appendChild(mutedAudio);
+        try { await mutedAudio.play(); } catch(e) { /* muted autoplay may still be blocked */ }
+
+        // Try to create and resume audio context
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            const srcNode = audioCtx.createMediaElementSource(mutedAudio);
+            const g = audioCtx.createGain(); g.gain.value = 0;
+            srcNode.connect(g).connect(audioCtx.destination);
+        } catch(e) { /* ignore if creation fails due to cross-origin */ }
+
+        if (audioCtx.state === 'suspended') {
+            try { await audioCtx.resume(); } catch(e) {}
+        }
+
+        if (audioCtx.state === 'running') {
+            document.getElementById("startOverlay").style.display = "none";
+            start();
+        } else {
+            // Autoplay blocked — show overlay and attach a one-time click handler to resume
+            console.log('Autoplay blocked; waiting for user gesture to start.');
+            const overlay = document.getElementById("startOverlay");
+            overlay.style.display = "flex";
+            overlay.querySelector('#startBtn').textContent = 'Tap to START';
+            const resumeHandler = async () => {
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    try { await audioCtx.resume(); } catch(e) {}
+                    document.getElementById("startOverlay").style.display = "none";
+                    start();
+                } catch(e) { console.log(e); }
+                document.body.removeEventListener('click', resumeHandler);
+            };
+            document.body.addEventListener('click', resumeHandler);
+        }
+    } catch(e) {
+        audioCtx = null;
+    }
+})();
+
 requestAnimationFrame(loop);
 </script>
 </body>
