@@ -647,8 +647,9 @@
                     let angleDiff = Math.abs(normalizedAngle - topAngle);
                     if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
                     
-                    const gapAngle = 0.35;
-                    const eliminationDist = maxRadius - this.radius - 8;
+                    // Expand elimination zone as speed rises so rounds don't stall.
+                    const gapAngle = Math.min(0.95, 0.35 + Math.max(0, speedFactor - 1) * 0.22);
+                    const eliminationDist = maxRadius - this.radius - (8 + Math.min(14, Math.max(0, speedFactor - 1) * 8));
                     
                     if (angleDiff < gapAngle && distFromCenter > eliminationDist) {
                         return true;
@@ -851,6 +852,7 @@
             let eliminationCooldown = 0;
             let roundEnded = false;
             const roundStartTime = performance.now();
+            let lastForcedEliminationAt = 0;
 
             const finishRound = (activeFlags) => {
                 if (roundEnded) return;
@@ -899,11 +901,13 @@
                 const activeFlags = flags.filter(f => !f.eliminated);
                 const elapsed = performance.now() - roundStartTime;
                 const roundProgress = Math.min(1, elapsed / ROUND_DURATION_MS);
-                const speedFactor = 1 + roundProgress * 1.35;
-                const eliminationAngle = (Math.PI * 1.5 + elapsed * 0.0012) % (Math.PI * 2);
+                const inSuddenDeath = elapsed >= ROUND_DURATION_MS;
+                const speedFactor = 1 + roundProgress * 1.8 + (inSuddenDeath ? 0.8 : 0);
+                const eliminationAngle = (Math.PI * 1.5 + elapsed * (inSuddenDeath ? 0.003 : 0.0018)) % (Math.PI * 2);
                 timerEl.textContent = Math.max(0, Math.ceil((ROUND_DURATION_MS - elapsed) / 1000));
 
-                if (activeFlags.length <= 1 || elapsed >= ROUND_DURATION_MS) {
+                // Winner is valid only when exactly one flag remains.
+                if (activeFlags.length <= 1) {
                     finishRound(activeFlags);
                     return;
                 }
@@ -922,7 +926,7 @@
 
                     if (shouldEliminate && eliminationCooldown === 0) {
                         flag.eliminate();
-                        eliminationCooldown = 14;
+                        eliminationCooldown = inSuddenDeath ? 1 : 4;
 
                         setTimeout(() => {
                             const div = document.createElement('div');
@@ -932,6 +936,22 @@
                         }, 350);
                     }
                 });
+
+                // After 13s, force rapid eliminations to avoid stalled rounds.
+                if (inSuddenDeath && activeFlags.length > 1 && (elapsed - lastForcedEliminationAt) > 180) {
+                    const nonIndia = activeFlags.filter(f => !(indiaWins && f.country.name === 'India'));
+                    const pool = nonIndia.length > 0 ? nonIndia : activeFlags;
+                    const victim = pool[Math.floor(Math.random() * pool.length)];
+                    victim.eliminate();
+                    lastForcedEliminationAt = elapsed;
+
+                    setTimeout(() => {
+                        const div = document.createElement('div');
+                        div.className = 'eliminatedFlagContainer';
+                        div.appendChild(createFlagElement(victim.country));
+                        eliminatedContainer.appendChild(div);
+                    }, 120);
+                }
 
                 counterEl.textContent = flags.filter(f => !f.eliminated).length;
                 roundAnimationId = requestAnimationFrame(animate);
