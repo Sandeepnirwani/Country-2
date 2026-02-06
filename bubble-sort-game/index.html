@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ball Sort – Scripted Autoplay</title>
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+canvas{display:block;}
+</style>
+</head>
+<body>
+
+<canvas id="c" width="360" height="640"></canvas>
+
+<script>
+/* ================= VISUAL CONFIG ================= */
+const COLORS = ["#ffd84d","#ff5959","#f39c12","#58d68d","#48c9b0","#5dade2","#af7ac5"];
+const BALLS = 4;
+const TUBES = 9;
+
+const MOVE_INTERVAL = 650;
+
+/* ================= CANVAS ================= */
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
+/* ================= BACKGROUND ================= */
+function bg(){
+  const g = ctx.createRadialGradient(180,0,40,180,0,640);
+  g.addColorStop(0,"#3a2d6f");
+  g.addColorStop(0.5,"#1b1533");
+  g.addColorStop(1,"#090814");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,360,640);
+}
+
+/* ================= LAYOUT ================= */
+const tubeY=150, tubeH=300, slotGap=42;
+const tubeX=[30,64,98,132,166,200,234,268,302];
+const tubeW=36;
+
+/* ================= STATE ================= */
+let tubes=[];
+let anim=null;
+let lastMove=0;
+
+/* ================= PRESET LEVEL ================= */
+function resetLevel(){
+  tubes=[
+    ["#ff5959","#ffd84d","#5dade2","#58d68d"],
+    ["#f39c12","#af7ac5","#48c9b0","#ff5959"],
+    ["#5dade2","#f39c12","#ffd84d","#af7ac5"],
+    ["#58d68d","#48c9b0","#ff5959","#5dade2"],
+    ["#af7ac5","#ffd84d","#f39c12","#58d68d"],
+    ["#48c9b0","#5dade2","#ff5959","#ffd84d"],
+    ["#f39c12","#58d68d","#af7ac5","#48c9b0"],
+    [],[]
+  ];
+}
+resetLevel();
+
+/* ================= DRAW ================= */
+function draw(){
+  bg();
+
+  ctx.strokeStyle="rgba(255,255,255,0.45)";
+  ctx.lineWidth=2;
+  tubeX.forEach(x=>{
+    ctx.beginPath();
+    ctx.roundRect(x-tubeW/2,tubeY,tubeW,tubeH,18);
+    ctx.stroke();
+  });
+
+  tubes.forEach((t,i)=>{
+    t.forEach((c,j)=>{
+      ball(c,tubeX[i],tubeY+tubeH-slotGap*(j+1));
+    });
+  });
+
+  if(anim) ball(anim.color,anim.x,anim.y);
+}
+
+function ball(col,x,y){
+  ctx.save();
+  ctx.shadowColor=col;
+  ctx.shadowBlur=14;
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.arc(x,y,14,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle="rgba(255,255,255,0.45)";
+  ctx.beginPath();
+  ctx.arc(x-4,y-5,4,0,Math.PI*2);
+  ctx.fill();
+}
+
+/* ================= SCRIPTED MOVES ================= */
+function scriptedMove(){
+  const from = Math.floor(Math.random()*7);
+  const to   = 7 + (Math.random()>0.5?0:1);
+  if(!tubes[from].length) return;
+  anim={
+    color:tubes[from].pop(),
+    from, to,
+    start:performance.now(),
+    duration:420
+  };
+}
+
+/* ================= ANIMATION ================= */
+function updateAnim(now){
+  if(!anim) return;
+  const p=Math.min(1,(now-anim.start)/anim.duration);
+  const ease=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+
+  const sx=tubeX[anim.from], tx=tubeX[anim.to];
+  const sy=tubeY-30;
+  const ty=tubeY+tubeH-slotGap*(tubes[anim.to].length+1);
+
+  anim.x=sx+(tx-sx)*ease;
+  anim.y=sy+(ty-sy)*ease;
+
+  if(p===1){
+    tubes[anim.to].push(anim.color);
+    anim=null;
+
+    // soft reshuffle to avoid patterns
+    if(Math.random()<0.15) resetLevel();
+  }
+}
+
+/* ================= LOOP ================= */
+function loop(now){
+  draw();
+  updateAnim(now);
+
+  if(!anim && now-lastMove>MOVE_INTERVAL){
+    lastMove=now;
+    scriptedMove();
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
