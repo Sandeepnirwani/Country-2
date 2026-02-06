@@ -3,439 +3,413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COUNTRY SPEED BATTLE PRO</title>
+    <title>Country Battle Royale</title>
     <style>
-        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
         body {
-            margin:0; background:#0a0a0a; overflow:hidden;
-            display:flex; justify-content:center; align-items:center;
-            font-family:'Arial Black', sans-serif; height: 100vh;
-        }
-        #stream {
-            width:100vw; height:177.77vw;
-            max-width:56.25vh; max-height:100vh;
-            position:relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
-        }
-        canvas { width:100%; height:100%; display:block; }
-        
-        .live {
-            position:absolute; top:30px; left:30px;
-            background:var(--red); padding:6px 15px;
-            font-weight:900; color:white; border-radius: 4px; z-index: 10;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        #scorecard { 
-            position:absolute; top:25px; right:25px; 
-            background:rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            color:white; padding:12px; border-radius:12px; z-index:15; 
-            border: 2px solid var(--neon); text-align: right;
-        }
-        .val { font-size:22px; color:var(--neon); text-shadow: 0 0 10px var(--neon); }
-
-        #cta {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            bottom: 110px; width: 90%; text-align: center;
-            color: white; font-size: 20px; font-weight: 900;
-            text-transform: uppercase; text-shadow: 2px 2px 5px #000; z-index: 10;
+            margin: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
 
-        #commentary { 
-            position:absolute; left:50%; transform:translateX(-50%); 
-            top: 45%; width: 85%; text-align: center;
-            color: #fff; font-size:32px; font-weight: 900;
-            z-index:20; opacity:0; transition: 0.3s;
-            text-shadow: 0 0 20px #00f2ff, 0 0 40px #000;
+        #gameContainer {
+            position: relative;
+            width: 100vh; /* Fallback */
+            height: 100vh;
+            aspect-ratio: 9 / 16;
+            background-color: #111;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
             pointer-events: none;
+            z-index: 10;
         }
 
-        #ticker { 
-            position:absolute; bottom:0; width:100%; height:60px; 
-            background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
+        #winnerDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 0 0 10px #000;
+            display: none;
+            z-index: 20;
+            text-align: center;
         }
-        #tickerInner { display:flex; gap:30px; white-space:nowrap; animation: scrollTicker 80s linear infinite; will-change: transform; }
-        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-66.66%); } }
-        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; flex-shrink: 0; }
-        .tick img { width:40px; height:28px; border-radius:4px; }
 
+        /* Start Overlay to enable Audio context */
         #startOverlay {
-            position: absolute; inset: 0; background: #000;
-            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 50;
         }
-        #startBtn {
-            padding: 25px 60px; font-size: 28px; background: var(--neon);
-            color: black; border: none; border-radius: 50px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 0 20px var(--neon);
-        }
-
-        #winner {
-            position:absolute; inset:0; display:none; 
-            align-items:center; justify-content:center; flex-direction:column;
-            background:rgba(0,0,0,0.98); z-index:30;
-        }
-        #winner img { width:250px; height:250px; border-radius:50%; border:10px solid var(--gold); }
-        #winner h1 { color:var(--gold); font-size: 4rem; margin-top:20px; text-align:center; }
     </style>
 </head>
 <body>
 
-<div id="startOverlay"><button id="startBtn">START STREAM</button></div>
-
-<div id="stream">
-    <div class="live">LIVE</div>
-    <div id="scorecard">
-        <div style="font-size:12px">REMAINING</div><div id="remaining" class="val">100</div>
+<div id="gameContainer">
+    <div id="ui">
+        <div id="roundTimer">13.0s</div>
+        <div id="gameCounter">Game: 1</div>
     </div>
+    <div id="winnerDisplay">WINNER!</div>
+    <canvas id="gameCanvas"></canvas>
     
-    <div id="commentary"></div>
-    <div id="cta">Comment your country name to win!</div>
-    
-    <canvas id="c" width="1080" height="1920"></canvas>
-    <div id="ticker"><div id="tickerInner"></div></div>
-    
-    <div id="winner">
-        <h2 style="color:white; font-size: 1.5rem;">GLOBAL CHAMPION!</h2>
-        <img id="winnerImg" src="">
-        <h1 id="winnerName"></h1>
-    </div>
+    <div id="startOverlay">TAP TO START</div>
 </div>
 
 <script>
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
-const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
-const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
+    // --- CONFIGURATION ---
+    const ROUND_DURATION = 10000; // 10 seconds (faster rounds)
+    const COUNTRIES = [
+        { name: "India", flag: "🇮🇳" },
+        { name: "USA", flag: "🇺🇸" },
+        { name: "China", flag: "🇨🇳" },
+        { name: "Russia", flag: "🇷🇺" },
+        { name: "Brazil", flag: "🇧🇷" },
+        { name: "Japan", flag: "🇯🇵" },
+        { name: "Germany", flag: "🇩🇪" },
+        { name: "UK", flag: "🇬🇧" },
+        { name: "France", flag: "🇫🇷" },
+        { name: "Italy", flag: "🇮🇹" },
+        { name: "Canada", flag: "🇨🇦" },
+        { name: "Australia", flag: "🇦🇺" },
+        { name: "Spain", flag: "🇪🇸" },
+        { name: "South Korea", flag: "🇰🇷" },
+        { name: "Mexico", flag: "🇲🇽" },
+        { name: "Turkey", flag: "🇹🇷" },
+        { name: "Indonesia", flag: "🇮🇩" },
+        { name: "Saudi Arabia", flag: "🇸🇦" },
+        { name: "South Africa", flag: "🇿🇦" },
+        { name: "Argentina", flag: "🇦🇷" }
+    ];
 
-let balls = [], particles = [], exited = [];
-let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
-let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s for faster pace)
-let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
-
-// --- DYNAMIC BACKGROUND MUSIC ---
-function startBGM() {
-    const playBeat = () => {
-        if (!running) return;
-        
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(45, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            
-            osc.connect(gain).connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        } catch(e) {}
-
-        // Tempo increases as balls decrease
-        let tempo = balls.length > 20 ? 600 : 400;
-        if(balls.length <= 5) tempo = 300;
-        
-        setTimeout(playBeat, tempo);
-    };
-    playBeat();
-}
-
-// --- ORIGINAL SOUNDS ---
-function bloop() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=500;
-  o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.08);
-  g.gain.value=.08;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.1);
-}
-
-function elimSound() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=180;
-  o.frequency.exponentialRampToValueAtTime(60,audioCtx.currentTime+.25);
-  g.gain.value=.2;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.3);
-}
-
-// --- COMMENTARY ---
-const fillerLines = [
-    "Unbelievable physics on display!",
-    "Look at the speed of these countries!",
-    "Who is your favorite? Comment now!",
-    "The circle is spinning faster!",
-    "Massive collision in the center!",
-    "Pure chaos in the arena!",
-    "Will your country survive?",
-    "India is holding strong!",
-    "Look at that bounce!"
-];
-
-function say(t, important = false) {
-    const comEl = document.getElementById('commentary');
-    comEl.textContent = t; comEl.style.opacity = 1;
-    const duration = important ? 4000 : 2000;
-    setTimeout(() => { if(comEl.textContent === t) { comEl.style.opacity = 0; comEl.textContent = ''; } }, duration);
-    window.speechSynthesis.cancel(); // clear any queued speech for instant sync
-    const u = new SpeechSynthesisUtterance(t);
-    u.rate = 1.2; u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-}
-
-function randomCommentary() {
-    if (!running) return;
-    say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
-    setTimeout(randomCommentary, 6000 + Math.random() * 5000);
-}
-
-// --- DATA ---
-const countries = [
-    {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},{c:'fr', n:'FRANCE'},
-    {c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},{c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},
-    {c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},{c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'kr', n:'KOREA'},
-    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'SOUTH AFRICA'},{c:'ar', n:'ARGENTINA'},
-    {c:'co', n:'COLOMBIA'},{c:'ve', n:'VENEZUELA'},{c:'pe', n:'PERU'},{c:'cl', n:'CHILE'},{c:'pl', n:'POLAND'},
-    {c:'ua', n:'UKRAINE'},{c:'ro', n:'ROMANIA'},{c:'hu', n:'HUNGARY'},{c:'cz', n:'CZECHIA'},{c:'be', n:'BELGIUM'},
-    {c:'nl', n:'NETHERLANDS'},{c:'se', n:'SWEDEN'},{c:'no', n:'NORWAY'},{c:'fi', n:'FINLAND'},{c:'dk', n:'DENMARK'},
-    {c:'ie', n:'IRELAND'},{c:'pt', n:'PORTUGAL'},{c:'ch', n:'SWITZERLAND'},{c:'at', n:'AUSTRIA'},{c:'il', n:'ISRAEL'},
-    {c:'sa', n:'SAUDI ARABIA'},{c:'ir', n:'IRAN'},{c:'pk', n:'PAKISTAN'},{c:'bd', n:'BANGLADESH'},{c:'lk', n:'SRI LANKA'},
-    {c:'mm', n:'MYANMAR'},{c:'th', n:'THAILAND'},{c:'ph', n:'PHILIPPINES'},{c:'sg', n:'SINGAPORE'},{c:'my', n:'MALAYSIA'},
-    {c:'vn', n:'VIETNAM'},{c:'kh', n:'CAMBODIA'},{c:'la', n:'LAOS'},{c:'np', n:'NEPAL'},{c:'bt', n:'BHUTAN'},
-    {c:'mg', n:'MADAGASCAR'},{c:'ke', n:'KENYA'},{c:'ug', n:'UGANDA'},{c:'tz', n:'TANZANIA'},{c:'ma', n:'MOROCCO'},
-    {c:'dz', n:'ALGERIA'},{c:'tn', n:'TUNISIA'},{c:'ly', n:'LIBYA'},{c:'sd', n:'SUDAN'},{c:'et', n:'ETHIOPIA'},
-    {c:'gh', n:'GHANA'},{c:'ci', n:'IVORY COAST'},{c:'cm', n:'CAMEROON'},{c:'sn', n:'SENEGAL'},{c:'ml', n:'MALI'},
-    {c:'dz', n:'ALGERIA-2'},{c:'nz', n:'NEW ZEALAND'},{c:'cy', n:'CYPRUS'},{c:'gr', n:'GREECE'},{c:'si', n:'SLOVENIA'},
-    {c:'sk', n:'SLOVAKIA'},{c:'hr', n:'CROATIA'},{c:'rs', n:'SERBIA'},{c:'me', n:'MONTENEGRO'},{c:'mk', n:'NORTH MACEDONIA'},
-    {c:'al', n:'ALBANIA'},{c:'lv', n:'LATVIA'},{c:'lt', n:'LITHUANIA'},{c:'ee', n:'ESTONIA'},{c:'lu', n:'LUXEMBOURG'},
-    {c:'is', n:'ICELAND'},{c:'mt', n:'MALTA'},{c:'ad', n:'ANDORRA'},{c:'sm', n:'SAN MARINO'},{c:'va', n:'VATICAN'},
-    {c:'mc', n:'MONACO'},{c:'li', n:'LIECHTENSTEIN'},{c:'bd', n:'BANGLADESH-2'},{c:'do', n:'DOMINICAN REPUBLIC'},{c:'cr', n:'COSTA RICA'},
-    {c:'pa', n:'PANAMA'},{c:'uy', n:'URUGUAY'},{c:'py', n:'PARAGUAY'},{c:'bo', n:'BOLIVIA'},{c:'ec', n:'ECUADOR'},
-    {c:'bg', n:'BULGARIA'},{c:'by', n:'BELARUS'},{c:'kz', n:'KAZAKHSTAN'},{c:'uz', n:'UZBEKISTAN'},{c:'az', n:'AZERBAIJAN'},
-    {c:'ge', n:'GEORGIA'},{c:'am', n:'ARMENIA'},{c:'tn', n:'TUNISIA-2'},{c:'jo', n:'JORDAN'},{c:'lb', n:'LEBANON'}
-];
-
-const flags = countries.map(x => {
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.src = `https://flagcdn.com/w160/${x.c.toLowerCase()}.png`;
-    return { name: x.n, img };
-});
-
-const tickerInner = document.getElementById('tickerInner');
-// Triple flags for seamless infinite scroll
-const allFlags = [...flags, ...flags, ...flags];
-allFlags.forEach(f => {
-    tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
-});
-
-/* >>> ADDED: WIN BIAS CONFIG (soft bias, not forced) */
-const TOP_FAVORED = [
-  'USA','CHINA','JAPAN','GERMANY','UK','FRANCE','BRAZIL'
-];
-const MID_FAVORED = [
-  'INDIA','PHILIPPINES','VIETNAM','INDONESIA'
-];
-function getSurvivalChance(name) {
-  if (TOP_FAVORED.includes(name)) return 0.65;
-  if (MID_FAVORED.includes(name)) return 0.45;
-  return 0.15;
-}
-/* <<< END ADDED */
-
-class Ball {
-    constructor(item) {
-        const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
-        this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
-        this.vx = (Math.random()-0.5)*55; this.vy = (Math.random()-0.5)*55; // increased speed
-        this.item = item; this.out = false;
+    // --- SETUP ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const winnerDisplay = document.getElementById('winnerDisplay');
+    const timerDisplay = document.getElementById('roundTimer');
+    const counterDisplay = document.getElementById('gameCounter');
+    
+    // Resize handling for 9:16
+    let w, h;
+    function resize() {
+        // Set internal resolution high for crisp text
+        canvas.width = 1080;
+        canvas.height = 1920;
+        w = canvas.width;
+        h = canvas.height;
     }
-    update() {
-        this.x += this.vx * slowMo; this.y += this.vy * slowMo;
-        const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
-        const effectiveRadius = RADIUS - arenaShrink;
-        if (d > effectiveRadius - BALL_R) {
-            let ang = Math.atan2(dy, dx) - arenaRotation;
-            while(ang < -Math.PI) ang += Math.PI*2;
-            while(ang > Math.PI) ang -= Math.PI*2;
-            if (ang > -GAP_ANGLE && ang < GAP_ANGLE) {
+    resize();
 
-                // ---- SOFT WIN BIAS LOGIC (ONLY CHANGE) ----
-                const surviveChance = getSurvivalChance(this.item.name);
-                if (Math.random() < surviveChance && balls.length > 3) {
-                    // lucky escape bounce
-                    const nx = dx/d, ny = dy/d;
-                    this.vx += nx * 22;
-                    this.vy += ny * 22;
-                    bloop();
-                    return;
-                }
-                // ---- end bias logic ----
+    // Game State
+    let balls = [];
+    let gameCount = 0;
+    let startTime = 0;
+    let isPlaying = false;
+    let gameLoopId;
+    let currentWinner = null;
+    let boundaryRadius = 0;
+    let initialBoundaryRadius = 0;
+    
+    // Audio Context
+    let audioCtx;
+    
+    // --- AUDIO SYSTEM (Bubbling Synth) ---
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
 
-                this.out = true;
-                for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
-                elimSound();
-                if(balls.length <= 3) say(this.item.name + " ELIMINATED!", false);
-            } else {
-                const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
-                this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
-                this.x = CENTER.x + nx*(effectiveRadius-BALL_R-2); this.y = CENTER.y + ny*(effectiveRadius-BALL_R-2);
-                bloop();
+    function playBubbleSound() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        // Bubbling effect: Sine wave dropping in pitch rapidly
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400 + Math.random() * 200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+    }
+    
+    // Background music placeholder
+    // If you have a file, use: new Audio('path/to/music.mp3').play();
+    function playBackgroundMusic() {
+       // Placeholder: User can insert actual music code here
+    }
+
+    // --- GAME LOGIC ---
+
+    class Ball {
+        constructor(country) {
+            this.country = country;
+            this.radius = 35; 
+            this.x = w/2 + (Math.random() - 0.5) * 500;
+            this.y = h/2 + (Math.random() - 0.5) * 500;
+            this.vx = (Math.random() - 0.5) * 22;
+            this.vy = (Math.random() - 0.5) * 22;
+            this.isDead = false;
+            this.mass = 1;
+        }
+
+        draw() {
+            if (this.isDead) return;
+            
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            // Draw Flag Circle
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw Emoji
+            ctx.font = `${this.radius * 1.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(this.country.flag, 0, 5); // minor adjustment for emoji alignment
+            
+            ctx.restore();
+        }
+
+        update(boundaryR) {
+            if (this.isDead) return;
+
+            // Move
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Boundary Constraint (Green Circle)
+            const dx = this.x - w/2;
+            const dy = this.y - h/2;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist + this.radius > boundaryR) {
+                // Push back inside
+                const angle = Math.atan2(dy, dx);
+                this.x = w/2 + Math.cos(angle) * (boundaryR - this.radius);
+                this.y = h/2 + Math.sin(angle) * (boundaryR - this.radius);
+                
+                // Bounce
+                this.vx = -this.vx * 0.8;
+                this.vy = -this.vy * 0.8;
+                
+                // Randomly add some chaos velocity to prevent getting stuck
+                this.vx += (Math.random() - 0.5) * 5;
+                this.vy += (Math.random() - 0.5) * 5;
             }
         }
     }
-    draw() {
-        ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, BALL_R, 0, Math.PI*2); ctx.clip();
-        if(this.item.img.complete) ctx.drawImage(this.item.img, this.x-BALL_R, this.y-BALL_R, BALL_R*2, BALL_R*2);
-        ctx.restore();
-    }
-}
 
-function start() {
-    balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
-    roundStart = Date.now();
-    arenaShrink = 0;
-    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i]));
-    say("THE RACE BEGINS!", true);
-    setTimeout(randomCommentary, 6000);
-    startBGM();
-}
+    function initGame() {
+        winnerDisplay.style.display = 'none';
+        gameCount++;
+        counterDisplay.innerText = `Game: ${gameCount}`;
+        
+        balls = COUNTRIES.map(c => new Ball(c));
+        
+        // RIGGING LOGIC: 60% Win Rate for India
+        // We create a "bias" logic.
+        // If (gameCount % 10) is 1, 2, 3, or 4 -> India is marked as "The Chosen One"
+        // Wait, 4/10 means 40%. Let's use modulus.
+        // Remainder 1, 4, 7, 9 (just arbitrary choices to spread it out) -> India Wins
+        // Actually, simple counter: if count <= 4 in a cycle of 10.
+        
+        let cycle = (gameCount - 1) % 10;
+        let indiaShouldWin = cycle < 6; // Games 1-6 of the batch of 10
+        
+        // Mark India
+        balls.forEach(b => {
+            if (b.country.name === "India") {
+                b.isIndia = true;
+                b.godMode = indiaShouldWin;
+            }
+        });
 
-function loop() {
-    const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(0.25, '#764ba2');
-    gradient.addColorStop(0.5, '#f093fb');
-    gradient.addColorStop(0.75, '#4facfe');
-    gradient.addColorStop(1, '#667eea');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1080, 1920);
-    if (running) {
-        // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
-        const elapsed = Date.now() - roundStart;
-        const progress = Math.min(1, elapsed / desiredDuration);
-        let dynamicSpeed = 1 + progress * 1.5; // ramps from 1x to ~2.5x for balance
-        // gentle boost speed gradually as balls get eliminated
-        if (balls.length <= 10) dynamicSpeed *= 1.05;
-        if (balls.length <= 5) dynamicSpeed *= 1.1;
-        if (balls.length <= 3) dynamicSpeed *= 1.15;
-        const baseSlow = announced3 ? 0.8 : 1;
-        slowMo = baseSlow * dynamicSpeed;
-        arenaRotation += 0.028 * dynamicSpeed; // increased rotation speed slightly
-        // gentle arena shrink ONLY when exactly 2 balls remain
-        if (balls.length === 2) {
-            arenaShrink += 1.2 * dynamicSpeed; // gentle squeeze at final 2
-            const maxShrink = RADIUS - 120; // less aggressive cap
-            arenaShrink = Math.min(arenaShrink, maxShrink);
-        }
-        balls.forEach(b => b.update());
-        balls = balls.filter(b => !b.out);
-        if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL THREE COUNTRIES!", true); }
-        if (balls.length === 1) {
-            running = false;
-            const w = balls[0].item;
-            document.getElementById("winnerImg").src = w.img.src;
-            document.getElementById("winnerName").textContent = w.name;
-            document.getElementById("winner").style.display = "flex";
-            say("CONGRATULATIONS TO " + w.name + "!", true);
-            setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 7000);
+        startTime = Date.now();
+        initialBoundaryRadius = w * 0.45; // Start size
+        boundaryRadius = initialBoundaryRadius;
+        isPlaying = true;
+        
+        playBackgroundMusic();
+        requestAnimationFrame(loop);
+    }
+
+    function resolveCollisions() {
+        for (let i = 0; i < balls.length; i++) {
+            for (let j = i + 1; j < balls.length; j++) {
+                let b1 = balls[i];
+                let b2 = balls[j];
+                
+                if (b1.isDead || b2.isDead) continue;
+
+                let dx = b2.x - b1.x;
+                let dy = b2.y - b1.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < b1.radius + b2.radius) {
+                    // Collision Detected
+                    
+                    // Simple Elastic Collision Physics
+                    let angle = Math.atan2(dy, dx);
+                    let tx = Math.cos(angle);
+                    let ty = Math.sin(angle);
+                    
+                    // Bounce
+                    let v1 = Math.sqrt(b1.vx*b1.vx + b1.vy*b1.vy);
+                    let v2 = Math.sqrt(b2.vx*b2.vx + b2.vy*b2.vy);
+                    
+                    b1.vx = -tx * v2; 
+                    b1.vy = -ty * v2;
+                    b2.vx = tx * v1; 
+                    b2.vy = ty * v1;
+
+                    // Separate them to prevent sticking
+                    let overlap = (b1.radius + b2.radius - dist) / 2;
+                    b1.x -= overlap * tx;
+                    b1.y -= overlap * ty;
+                    b2.x += overlap * tx;
+                    b2.y += overlap * ty;
+
+                    playBubbleSound();
+
+                    // ELIMINATION LOGIC
+                    // 5% chance to eliminate on collision to speed things up
+                    // But we respect "God Mode"
+                    if (Math.random() < 0.1) { 
+                        if (b1.godMode && !b2.godMode) {
+                            b2.isDead = true; 
+                        } else if (b2.godMode && !b1.godMode) {
+                            b1.isDead = true;
+                        } else {
+                            // Random kill
+                            Math.random() > 0.5 ? b1.isDead = true : b2.isDead = true;
+                        }
+                    }
+                }
+            }
         }
     }
-    
-    // Arena Ring - FIXED DRAWING
-    ctx.save(); 
-    ctx.translate(CENTER.x, CENTER.y); 
-    ctx.rotate(arenaRotation);
-    ctx.strokeStyle = "#00f2ff"; 
-    ctx.lineWidth = 25; 
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = "#00f2ff";
-    ctx.beginPath(); 
-    // draw ring with a visible gap that matches the elimination window
-    const drawRadius = Math.max(120, RADIUS - arenaShrink);
-    ctx.arc(0, 0, drawRadius, GAP_ANGLE, -GAP_ANGLE);
-    ctx.stroke(); 
-    ctx.restore();
-    
-    balls.forEach(b => b.draw());
-    // Clean up old particles to prevent memory buildup
-    if(particles.length > 500) particles = particles.slice(-250); // keep only recent ones
-    particles.forEach((p, i) => {
-        p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
-        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
-        if(p.l<=0) particles.splice(i,1);
+
+    function loop() {
+        if (!isPlaying) return;
+
+        // 1. Clear Screen
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. Update Timer & Boundary
+        let elapsed = Date.now() - startTime;
+        let progress = elapsed / ROUND_DURATION;
+        
+        // Shrink boundary: Starts at 100%, goes to 10% size by end
+        boundaryRadius = initialBoundaryRadius * (1 - (progress * 0.9));
+        
+        if (progress >= 1) boundaryRadius = 50; // Final squeeze
+
+        timerDisplay.innerText = Math.max(0, (13 - (elapsed/1000)).toFixed(1)) + "s";
+
+        // 3. Draw Boundary (Green Circle)
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, boundaryRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = '#0f0';
+        ctx.lineWidth = 10;
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff11'; // Slight white background inside circle
+        ctx.fill();
+
+        // 4. Update Physics
+        balls.forEach(b => b.update(boundaryRadius));
+        resolveCollisions();
+
+        // 5. Draw Balls
+        balls.forEach(b => b.draw());
+
+        // 6. Check Win Condition
+        let survivors = balls.filter(b => !b.isDead);
+        
+        // Force end if time is up or 1 survivor
+        if (survivors.length <= 1 || elapsed > ROUND_DURATION) {
+            endGame(survivors);
+            return;
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    function endGame(survivors) {
+        isPlaying = false;
+        let winnerName = "Draw";
+        
+        if (survivors.length > 0) {
+            // If India is in the survivors and has GodMode, it MUST win
+            let india = survivors.find(b => b.isIndia);
+            if (india && india.godMode) {
+                winnerName = "India";
+            } else {
+                // Otherwise random survivor wins
+                winnerName = survivors[0].country.name;
+            }
+        }
+
+        winnerDisplay.innerText = winnerName + " WINS!";
+        winnerDisplay.style.display = 'block';
+
+        // Auto restart after 2 seconds
+        setTimeout(initGame, 2000);
+    }
+
+    // Start Handler
+    document.getElementById('startOverlay').addEventListener('click', function() {
+        this.style.display = 'none';
+        initAudio();
+        initGame();
     });
-    ctx.globalAlpha=1;
-    document.getElementById('remaining').textContent = balls.length;
-    // Periodic cleanup to prevent memory leaks on long streams
-    if(Math.random() < 0.01) {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
-    }
-    requestAnimationFrame(loop);
-}
 
-/* === Start / Audio Autoplay logic (unchanged) === */
-document.getElementById("startBtn").onclick = () => {
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById("startOverlay").style.display = "none";
-        start();
-    } catch(e) { console.log(e); }
-};
-
-// Enhanced auto-start: try muted <audio> autoplay to prime media, connect it to AudioContext if possible,
-// and attach a one-time user-gesture resume if autoplay is blocked.
-(async function tryAutoStart(){
-    try {
-        // Create short muted audio and try to play it (muted autoplay usually allowed)
-        let mutedAudio = document.createElement('audio');
-        mutedAudio.muted = true; mutedAudio.autoplay = true; mutedAudio.playsInline = true;
-        // a tiny silent WAV (very short) to avoid external network requests
-        mutedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
-        document.body.appendChild(mutedAudio);
-        try { await mutedAudio.play(); } catch(e) { /* muted autoplay may still be blocked */ }
-
-        // Try to create and resume audio context
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        try {
-            const srcNode = audioCtx.createMediaElementSource(mutedAudio);
-            const g = audioCtx.createGain(); g.gain.value = 0;
-            srcNode.connect(g).connect(audioCtx.destination);
-        } catch(e) { /* ignore if creation fails due to cross-origin */ }
-
-        if (audioCtx.state === 'suspended') {
-            try { await audioCtx.resume(); } catch(e) {}
-        }
-
-        if (audioCtx.state === 'running') {
-            document.getElementById("startOverlay").style.display = "none";
-            start();
-        } else {
-            // Autoplay blocked — show overlay and attach a one-time click handler to resume
-            console.log('Autoplay blocked; waiting for user gesture to start.');
-            const overlay = document.getElementById("startOverlay");
-            overlay.style.display = "flex";
-            overlay.querySelector('#startBtn').textContent = 'Tap to START';
-            const resumeHandler = async () => {
-                try {
-                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    try { await audioCtx.resume(); } catch(e) {}
-                    document.getElementById("startOverlay").style.display = "none";
-                    start();
-                } catch(e) { console.log(e); }
-                document.body.removeEventListener('click', resumeHandler);
-            };
-            document.body.addEventListener('click', resumeHandler);
-        }
-    } catch(e) {
-        audioCtx = null;
-    }
-})();
-
-requestAnimationFrame(loop);
 </script>
 </body>
 </html>

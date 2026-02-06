@@ -2,440 +2,964 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>COUNTRY SPEED BATTLE PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flag Battle Royale</title>
     <style>
-        :root { --neon:#00f2ff; --gold:#ffcc00; --red:#ff3131; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            margin:0; background:#0a0a0a; overflow:hidden;
-            display:flex; justify-content:center; align-items:center;
-            font-family:'Arial Black', sans-serif; height: 100vh;
-        }
-        #stream {
-            width:100vw; height:177.77vw;
-            max-width:56.25vh; max-height:100vh;
-            position:relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #667eea 100%);
-        }
-        canvas { width:100%; height:100%; display:block; }
-        
-        .live {
-            position:absolute; top:30px; left:30px;
-            background:var(--red); padding:6px 15px;
-            font-weight:900; color:white; border-radius: 4px; z-index: 10;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        #scorecard { 
-            position:absolute; top:25px; right:25px; 
-            background:rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            color:white; padding:12px; border-radius:12px; z-index:15; 
-            border: 2px solid var(--neon); text-align: right;
-        }
-        .val { font-size:22px; color:var(--neon); text-shadow: 0 0 10px var(--neon); }
-
-        #cta {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            bottom: 110px; width: 90%; text-align: center;
-            color: white; font-size: 20px; font-weight: 900;
-            text-transform: uppercase; text-shadow: 2px 2px 5px #000; z-index: 10;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
         }
 
-        #commentary { 
-            position:absolute; left:50%; transform:translateX(-50%); 
-            top: 45%; width: 85%; text-align: center;
-            color: #fff; font-size:32px; font-weight: 900;
-            z-index:20; opacity:0; transition: 0.3s;
-            text-shadow: 0 0 20px #00f2ff, 0 0 40px #000;
+        #gameContainer {
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 9/16;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #topBar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .recentWinners {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .recentWinners span {
+            color: #999;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+
+        .winnerFlagContainer {
+            width: 28px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 2px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .topCountries {
+            display: flex;
+            gap: 10px;
+        }
+
+        .topCountry {
+            text-align: center;
+        }
+
+        .topFlagContainer {
+            width: 32px;
+            height: 24px;
+            border: 2px solid #ffd700;
+            border-radius: 2px;
+            margin-bottom: 2px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .topCountry .rank {
+            color: #ffd700;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        #circleContainer {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 78%;
+            aspect-ratio: 1/1;
+            z-index: 10;
+        }
+
+        #circle {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 50%;
+            border: 12px solid #00ff88;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.7), 
+                        0 0 100px rgba(0, 255, 136, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flagContainer {
+            position: absolute;
+            width: 35px;
+            height: 25px;
+            border: 2px solid #333;
+            border-radius: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .flagContainer.eliminated {
+            animation: fallOut 1.5s ease-out forwards;
+            z-index: 5;
+        }
+
+        @keyframes fallOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0.2;
+                transform: translateY(700px) scale(0.5) rotate(720deg);
+            }
+        }
+
+        .flagContainer.winner {
+            animation: celebrate 0.5s ease-in-out infinite;
+            z-index: 150;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.5) rotate(10deg); }
+        }
+
+        .flagImg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        #timer {
+            position: absolute;
+            top: 95px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 52px;
+            font-weight: bold;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 1);
+            z-index: 150;
+        }
+
+        #counter {
+            position: absolute;
+            top: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff3366;
+            font-size: 26px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 51, 102, 0.8);
+            z-index: 150;
+        }
+
+        #result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            z-index: 250;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 1);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px 40px;
+            border-radius: 20px;
+            border: 4px solid #00ff88;
+        }
+
+        #result.show {
+            animation: showResult 3s ease-in-out;
+        }
+
+        @keyframes showResult {
+            0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            10%, 90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        #eliminatedArea {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 220px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+            z-index: 1;
             pointer-events: none;
         }
 
-        #ticker { 
-            position:absolute; bottom:0; width:100%; height:60px; 
-            background:rgba(0,0,0,0.95); display:flex; align-items:center; overflow:hidden; z-index:14;
+        #eliminatedFlags {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            z-index: 2;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        #tickerInner { display:flex; gap:30px; white-space:nowrap; animation: scrollTicker 80s linear infinite; will-change: transform; }
-        @keyframes scrollTicker { 0% { transform: translateX(0); } 100% { transform: translateX(-66.66%); } }
-        .tick { display:flex; align-items:center; gap:10px; color:white; font-size: 18px; flex-shrink: 0; }
-        .tick img { width:40px; height:28px; border-radius:4px; }
+
+        .eliminatedFlagContainer {
+            width: 36px;
+            height: 26px;
+            border: 2px solid #555;
+            border-radius: 2px;
+            opacity: 0;
+            animation: fadeInEliminated 0.6s ease-out forwards;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        @keyframes fadeInEliminated {
+            from { opacity: 0; transform: scale(0.3) rotate(180deg); }
+            to { opacity: 0.5; transform: scale(1) rotate(0deg); }
+        }
+
+        #redLine {
+            position: absolute;
+            bottom: 220px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff0000, transparent);
+            box-shadow: 0 0 10px #ff0000;
+            z-index: 3;
+        }
 
         #startOverlay {
-            position: absolute; inset: 0; background: #000;
-            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #startBtn {
-            padding: 25px 60px; font-size: 28px; background: var(--neon);
-            color: black; border: none; border-radius: 50px; font-weight: 900; cursor: pointer;
-            box-shadow: 0 0 20px var(--neon);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            cursor: pointer;
         }
 
-        #winner {
-            position:absolute; inset:0; display:none; 
-            align-items:center; justify-content:center; flex-direction:column;
-            background:rgba(0,0,0,0.98); z-index:30;
+        #startButton {
+            background: #00ff88;
+            color: #000;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 20px 50px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+            transition: transform 0.2s;
         }
-        #winner img { width:250px; height:250px; border-radius:50%; border:10px solid var(--gold); }
-        #winner h1 { color:var(--gold); font-size: 4rem; margin-top:20px; text-align:center; }
+
+        #startButton:hover {
+            transform: scale(1.1);
+        }
+
+        #startButton:active {
+            transform: scale(0.95);
+        }
+
+        .startText {
+            color: #fff;
+            font-size: 18px;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
+    <div id="gameContainer">
+        <div id="startOverlay">
+            <button id="startButton">START GAME</button>
+            <div class="startText">Click to enable sound & start</div>
+        </div>
 
-<div id="startOverlay"><button id="startBtn">START STREAM</button></div>
-
-<div id="stream">
-    <div class="live">LIVE</div>
-    <div id="scorecard">
-        <div style="font-size:12px">REMAINING</div><div id="remaining" class="val">100</div>
-    </div>
-    
-    <div id="commentary"></div>
-    <div id="cta">Comment your country name to win!</div>
-    
-    <canvas id="c" width="1080" height="1920"></canvas>
-    <div id="ticker"><div id="tickerInner"></div></div>
-    
-    <div id="winner">
-        <h2 style="color:white; font-size: 1.5rem;">GLOBAL CHAMPION!</h2>
-        <img id="winnerImg" src="">
-        <h1 id="winnerName"></h1>
-    </div>
-</div>
-
-<script>
-const canvas = document.getElementById("c");
-const ctx = canvas.getContext("2d");
-const CENTER = { x: 540, y: 960 }, RADIUS = 480, BALL_R = 28, TOTAL = 100;
-const GAP_ANGLE = 0.6; // angular half-width (radians) of the exit gap
-
-let balls = [], particles = [], exited = [];
-let running = false, slowMo = 1, announced3 = false, arenaRotation = 0, audioCtx;
-let roundStart = 0, desiredDuration = 35000; // desired round duration in ms (~35s for faster pace)
-let arenaShrink = 0; // pixels to shrink from RADIUS during endgame
-
-// --- DYNAMIC BACKGROUND MUSIC ---
-function startBGM() {
-    const playBeat = () => {
-        if (!running) return;
+        <div id="topBar">
+            <div class="recentWinners">
+                <span>WINNERS</span>
+                <div id="recentWinnersFlags"></div>
+            </div>
+            <div class="topCountries">
+                <div class="topCountry">
+                    <div class="topFlagContainer" id="top1Container"></div>
+                    <div class="rank">#1</div>
+                </div>
+                <div class="topCountry">
+                    <div class="topFlagContainer" id="top2Container"></div>
+                    <div class="rank">#2</div>
+                </div>
+                <div class="topCountry">
+                    <div class="topFlagContainer" id="top3Container"></div>
+                    <div class="rank">#3</div>
+                </div>
+            </div>
+        </div>
         
-        try {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(45, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
-            
-            osc.connect(gain).connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        } catch(e) {}
-
-        // Tempo increases as balls decrease
-        let tempo = balls.length > 20 ? 600 : 400;
-        if(balls.length <= 5) tempo = 300;
+        <div id="timer">13</div>
+        <div id="counter">FLAGS: <span id="flagCount">0</span></div>
         
-        setTimeout(playBeat, tempo);
-    };
-    playBeat();
-}
+        <div id="circleContainer">
+            <div id="circle"></div>
+        </div>
+        
+        <div id="result"></div>
+        
+        <div id="redLine"></div>
+        <div id="eliminatedArea"></div>
+        <div id="eliminatedFlags"></div>
+    </div>
 
-// --- ORIGINAL SOUNDS ---
-function bloop() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=500;
-  o.frequency.exponentialRampToValueAtTime(1200,audioCtx.currentTime+.08);
-  g.gain.value=.08;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.1);
-}
+    <script>
+        const countries = [
+            { name: 'India', emoji: '🇮🇳' },
+            { name: 'Australia', emoji: '🇦🇺' },
+            { name: 'Bangladesh', emoji: '🇧🇩' },
+            { name: 'Belgium', emoji: '🇧🇪' },
+            { name: 'China', emoji: '🇨🇳' },
+            { name: 'Kuwait', emoji: '🇰🇼' },
+            { name: 'Sweden', emoji: '🇸🇪' },
+            { name: 'Mexico', emoji: '🇲🇽' },
+            { name: 'Ukraine', emoji: '🇺🇦' },
+            { name: 'Trinidad', emoji: '🇹🇹' },
+            { name: 'Croatia', emoji: '🇭🇷' },
+            { name: 'Zimbabwe', emoji: '🇿🇼' },
+            { name: 'Jamaica', emoji: '🇯🇲' },
+            { name: 'UK', emoji: '🇬🇧' },
+            { name: 'Norway', emoji: '🇳🇴' },
+            { name: 'Thailand', emoji: '🇹🇭' },
+            { name: 'Ecuador', emoji: '🇪🇨' },
+            { name: 'Indonesia', emoji: '🇮🇩' },
+            { name: 'Peru', emoji: '🇵🇪' },
+            { name: 'Philippines', emoji: '🇵🇭' },
+            { name: 'Singapore', emoji: '🇸🇬' },
+            { name: 'Oman', emoji: '🇴🇲' },
+            { name: 'South Africa', emoji: '🇿🇦' },
+            { name: 'UAE', emoji: '🇦🇪' },
+            { name: 'Qatar', emoji: '🇶🇦' },
+            { name: 'Cuba', emoji: '🇨🇺' },
+            { name: 'Pakistan', emoji: '🇵🇰' },
+            { name: 'Romania', emoji: '🇷🇴' },
+            { name: 'USA', emoji: '🇺🇸' },
+            { name: 'Canada', emoji: '🇨🇦' },
+            { name: 'Turkey', emoji: '🇹🇷' },
+            { name: 'Argentina', emoji: '🇦🇷' },
+            { name: 'Egypt', emoji: '🇪🇬' },
+            { name: 'Malaysia', emoji: '🇲🇾' },
+            { name: 'Netherlands', emoji: '🇳🇱' },
+            { name: 'Poland', emoji: '🇵🇱' },
+            { name: 'Russia', emoji: '🇷🇺' },
+            { name: 'Lithuania', emoji: '🇱🇹' },
+            { name: 'Brazil', emoji: '🇧🇷' },
+            { name: 'France', emoji: '🇫🇷' },
+            { name: 'Germany', emoji: '🇩🇪' },
+            { name: 'Italy', emoji: '🇮🇹' },
+            { name: 'Spain', emoji: '🇪🇸' },
+            { name: 'Portugal', emoji: '🇵🇹' },
+            { name: 'Greece', emoji: '🇬🇷' },
+            { name: 'Japan', emoji: '🇯🇵' },
+            { name: 'South Korea', emoji: '🇰🇷' },
+            { name: 'Vietnam', emoji: '🇻🇳' },
+            { name: 'Iran', emoji: '🇮🇷' },
+            { name: 'Iraq', emoji: '🇮🇶' },
+            { name: 'Saudi Arabia', emoji: '🇸🇦' },
+            { name: 'Israel', emoji: '🇮🇱' },
+            { name: 'Nigeria', emoji: '🇳🇬' },
+            { name: 'Kenya', emoji: '🇰🇪' },
+            { name: 'Morocco', emoji: '🇲🇦' },
+            { name: 'Algeria', emoji: '🇩🇿' }
+        ];
 
-function elimSound() {
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.frequency.value=180;
-  o.frequency.exponentialRampToValueAtTime(60,audioCtx.currentTime+.25);
-  g.gain.value=.2;
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.3);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.3);
-}
+        let audioContext = null;
+        let audioEnabled = false;
 
-// --- COMMENTARY ---
-const fillerLines = [
-    "Unbelievable physics on display!",
-    "Look at the speed of these countries!",
-    "Who is your favorite? Comment now!",
-    "The circle is spinning faster!",
-    "Massive collision in the center!",
-    "Pure chaos in the arena!",
-    "Will your country survive?",
-    "India is holding strong!",
-    "Look at that bounce!"
-];
-
-function say(t, important = false) {
-    const comEl = document.getElementById('commentary');
-    comEl.textContent = t; comEl.style.opacity = 1;
-    const duration = important ? 4000 : 2000;
-    setTimeout(() => { if(comEl.textContent === t) { comEl.style.opacity = 0; comEl.textContent = ''; } }, duration);
-    window.speechSynthesis.cancel(); // clear any queued speech for instant sync
-    const u = new SpeechSynthesisUtterance(t);
-    u.rate = 1.2; u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-}
-
-function randomCommentary() {
-    if (!running) return;
-    say(fillerLines[Math.floor(Math.random() * fillerLines.length)]);
-    setTimeout(randomCommentary, 6000 + Math.random() * 5000);
-}
-
-// --- DATA ---
-const countries = [
-    {c:'us', n:'USA'},{c:'in', n:'INDIA'},{c:'br', n:'BRAZIL'},{c:'gb', n:'UK'},{c:'fr', n:'FRANCE'},
-    {c:'de', n:'GERMANY'},{c:'jp', n:'JAPAN'},{c:'cn', n:'CHINA'},{c:'ru', n:'RUSSIA'},{c:'it', n:'ITALY'},
-    {c:'es', n:'SPAIN'},{c:'mx', n:'MEXICO'},{c:'ca', n:'CANADA'},{c:'au', n:'AUSTRALIA'},{c:'kr', n:'KOREA'},
-    {c:'id', n:'INDONESIA'},{c:'ng', n:'NIGERIA'},{c:'eg', n:'EGYPT'},{c:'za', n:'SOUTH AFRICA'},{c:'ar', n:'ARGENTINA'},
-    {c:'co', n:'COLOMBIA'},{c:'ve', n:'VENEZUELA'},{c:'pe', n:'PERU'},{c:'cl', n:'CHILE'},{c:'pl', n:'POLAND'},
-    {c:'ua', n:'UKRAINE'},{c:'ro', n:'ROMANIA'},{c:'hu', n:'HUNGARY'},{c:'cz', n:'CZECHIA'},{c:'be', n:'BELGIUM'},
-    {c:'nl', n:'NETHERLANDS'},{c:'se', n:'SWEDEN'},{c:'no', n:'NORWAY'},{c:'fi', n:'FINLAND'},{c:'dk', n:'DENMARK'},
-    {c:'ie', n:'IRELAND'},{c:'pt', n:'PORTUGAL'},{c:'ch', n:'SWITZERLAND'},{c:'at', n:'AUSTRIA'},{c:'il', n:'ISRAEL'},
-    {c:'sa', n:'SAUDI ARABIA'},{c:'ir', n:'IRAN'},{c:'pk', n:'PAKISTAN'},{c:'bd', n:'BANGLADESH'},{c:'lk', n:'SRI LANKA'},
-    {c:'mm', n:'MYANMAR'},{c:'th', n:'THAILAND'},{c:'ph', n:'PHILIPPINES'},{c:'sg', n:'SINGAPORE'},{c:'my', n:'MALAYSIA'},
-    {c:'vn', n:'VIETNAM'},{c:'kh', n:'CAMBODIA'},{c:'la', n:'LAOS'},{c:'np', n:'NEPAL'},{c:'bt', n:'BHUTAN'},
-    {c:'mg', n:'MADAGASCAR'},{c:'ke', n:'KENYA'},{c:'ug', n:'UGANDA'},{c:'tz', n:'TANZANIA'},{c:'ma', n:'MOROCCO'},
-    {c:'dz', n:'ALGERIA'},{c:'tn', n:'TUNISIA'},{c:'ly', n:'LIBYA'},{c:'sd', n:'SUDAN'},{c:'et', n:'ETHIOPIA'},
-    {c:'gh', n:'GHANA'},{c:'ci', n:'IVORY COAST'},{c:'cm', n:'CAMEROON'},{c:'sn', n:'SENEGAL'},{c:'ml', n:'MALI'},
-    {c:'dz', n:'ALGERIA-2'},{c:'nz', n:'NEW ZEALAND'},{c:'cy', n:'CYPRUS'},{c:'gr', n:'GREECE'},{c:'si', n:'SLOVENIA'},
-    {c:'sk', n:'SLOVAKIA'},{c:'hr', n:'CROATIA'},{c:'rs', n:'SERBIA'},{c:'me', n:'MONTENEGRO'},{c:'mk', n:'NORTH MACEDONIA'},
-    {c:'al', n:'ALBANIA'},{c:'lv', n:'LATVIA'},{c:'lt', n:'LITHUANIA'},{c:'ee', n:'ESTONIA'},{c:'lu', n:'LUXEMBOURG'},
-    {c:'is', n:'ICELAND'},{c:'mt', n:'MALTA'},{c:'ad', n:'ANDORRA'},{c:'sm', n:'SAN MARINO'},{c:'va', n:'VATICAN'},
-    {c:'mc', n:'MONACO'},{c:'li', n:'LIECHTENSTEIN'},{c:'bd', n:'BANGLADESH-2'},{c:'do', n:'DOMINICAN REPUBLIC'},{c:'cr', n:'COSTA RICA'},
-    {c:'pa', n:'PANAMA'},{c:'uy', n:'URUGUAY'},{c:'py', n:'PARAGUAY'},{c:'bo', n:'BOLIVIA'},{c:'ec', n:'ECUADOR'},
-    {c:'bg', n:'BULGARIA'},{c:'by', n:'BELARUS'},{c:'kz', n:'KAZAKHSTAN'},{c:'uz', n:'UZBEKISTAN'},{c:'az', n:'AZERBAIJAN'},
-    {c:'ge', n:'GEORGIA'},{c:'am', n:'ARMENIA'},{c:'tn', n:'TUNISIA-2'},{c:'jo', n:'JORDAN'},{c:'lb', n:'LEBANON'}
-];
-
-const flags = countries.map(x => {
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.src = `https://flagcdn.com/w160/${x.c.toLowerCase()}.png`;
-    return { name: x.n, img };
-});
-
-const tickerInner = document.getElementById('tickerInner');
-// Triple flags for seamless infinite scroll
-const allFlags = [...flags, ...flags, ...flags];
-allFlags.forEach(f => {
-    tickerInner.innerHTML += `<div class="tick"><img src="${f.img.src}"> <span>${f.name}</span></div>`;
-});
-
-/* >>> ADDED: WIN BIAS CONFIG (soft bias, not forced) */
-const TOP_FAVORED = [
-  'USA','CHINA','JAPAN','GERMANY','UK','FRANCE','BRAZIL'
-];
-const MID_FAVORED = [
-  'INDIA','PHILIPPINES','VIETNAM','INDONESIA'
-];
-function getSurvivalChance(name) {
-  if (TOP_FAVORED.includes(name)) return 0.65;
-  if (MID_FAVORED.includes(name)) return 0.45;
-  return 0.15;
-}
-/* <<< END ADDED */
-
-class Ball {
-    constructor(item) {
-        const a = Math.random()*Math.PI*2, r = Math.random()*(RADIUS-120);
-        this.x = CENTER.x + Math.cos(a)*r; this.y = CENTER.y + Math.sin(a)*r;
-        this.vx = (Math.random()-0.5)*55; this.vy = (Math.random()-0.5)*55; // increased speed
-        this.item = item; this.out = false;
-    }
-    update() {
-        this.x += this.vx * slowMo; this.y += this.vy * slowMo;
-        const dx = this.x - CENTER.x, dy = this.y - CENTER.y, d = Math.hypot(dx, dy);
-        const effectiveRadius = RADIUS - arenaShrink;
-        if (d > effectiveRadius - BALL_R) {
-            let ang = Math.atan2(dy, dx) - arenaRotation;
-            while(ang < -Math.PI) ang += Math.PI*2;
-            while(ang > Math.PI) ang -= Math.PI*2;
-            if (ang > -GAP_ANGLE && ang < GAP_ANGLE) {
-
-                // ---- SOFT WIN BIAS LOGIC (ONLY CHANGE) ----
-                const surviveChance = getSurvivalChance(this.item.name);
-                if (Math.random() < surviveChance && balls.length > 3) {
-                    // lucky escape bounce
-                    const nx = dx/d, ny = dy/d;
-                    this.vx += nx * 22;
-                    this.vy += ny * 22;
-                    bloop();
-                    return;
-                }
-                // ---- end bias logic ----
-
-                this.out = true;
-                for(let i=0; i<20; i++) particles.push({x:this.x, y:this.y, vx:(Math.random()-0.5)*14, vy:(Math.random()-0.5)*14, l:1});
-                elimSound();
-                if(balls.length <= 3) say(this.item.name + " ELIMINATED!", false);
-            } else {
-                const nx = dx/d, ny = dy/d, dot = (this.vx*nx + this.vy*ny);
-                this.vx -= 2*dot*nx; this.vy -= 2*dot*ny;
-                this.x = CENTER.x + nx*(effectiveRadius-BALL_R-2); this.y = CENTER.y + ny*(effectiveRadius-BALL_R-2);
-                bloop();
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioEnabled = true;
             }
         }
-    }
-    draw() {
-        ctx.save(); ctx.beginPath(); ctx.arc(this.x, this.y, BALL_R, 0, Math.PI*2); ctx.clip();
-        if(this.item.img.complete) ctx.drawImage(this.item.img, this.x-BALL_R, this.y-BALL_R, BALL_R*2, BALL_R*2);
-        ctx.restore();
-    }
-}
 
-function start() {
-    balls = []; particles = []; announced3 = false; slowMo = 1; running = true;
-    roundStart = Date.now();
-    arenaShrink = 0;
-    for(let i=0; i<TOTAL; i++) balls.push(new Ball(flags[i]));
-    say("THE RACE BEGINS!", true);
-    setTimeout(randomCommentary, 6000);
-    startBGM();
-}
-
-function loop() {
-    const gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(0.25, '#764ba2');
-    gradient.addColorStop(0.5, '#f093fb');
-    gradient.addColorStop(0.75, '#4facfe');
-    gradient.addColorStop(1, '#667eea');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1080, 1920);
-    if (running) {
-        // dynamic speed scaling so a round finishes roughly in `desiredDuration` ms
-        const elapsed = Date.now() - roundStart;
-        const progress = Math.min(1, elapsed / desiredDuration);
-        let dynamicSpeed = 1 + progress * 1.5; // ramps from 1x to ~2.5x for balance
-        // gentle boost speed gradually as balls get eliminated
-        if (balls.length <= 10) dynamicSpeed *= 1.05;
-        if (balls.length <= 5) dynamicSpeed *= 1.1;
-        if (balls.length <= 3) dynamicSpeed *= 1.15;
-        const baseSlow = announced3 ? 0.8 : 1;
-        slowMo = baseSlow * dynamicSpeed;
-        arenaRotation += 0.028 * dynamicSpeed; // increased rotation speed slightly
-        // gentle arena shrink ONLY when exactly 2 balls remain
-        if (balls.length === 2) {
-            arenaShrink += 1.2 * dynamicSpeed; // gentle squeeze at final 2
-            const maxShrink = RADIUS - 120; // less aggressive cap
-            arenaShrink = Math.min(arenaShrink, maxShrink);
-        }
-        balls.forEach(b => b.update());
-        balls = balls.filter(b => !b.out);
-        if (balls.length === 3 && !announced3) { announced3 = true; say("FINAL THREE COUNTRIES!", true); }
-        if (balls.length === 1) {
-            running = false;
-            const w = balls[0].item;
-            document.getElementById("winnerImg").src = w.img.src;
-            document.getElementById("winnerName").textContent = w.name;
-            document.getElementById("winner").style.display = "flex";
-            say("CONGRATULATIONS TO " + w.name + "!", true);
-            setTimeout(() => { document.getElementById("winner").style.display = "none"; start(); }, 7000);
-        }
-    }
-    
-    // Arena Ring - FIXED DRAWING
-    ctx.save(); 
-    ctx.translate(CENTER.x, CENTER.y); 
-    ctx.rotate(arenaRotation);
-    ctx.strokeStyle = "#00f2ff"; 
-    ctx.lineWidth = 25; 
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = "#00f2ff";
-    ctx.beginPath(); 
-    // draw ring with a visible gap that matches the elimination window
-    const drawRadius = Math.max(120, RADIUS - arenaShrink);
-    ctx.arc(0, 0, drawRadius, GAP_ANGLE, -GAP_ANGLE);
-    ctx.stroke(); 
-    ctx.restore();
-    
-    balls.forEach(b => b.draw());
-    // Clean up old particles to prevent memory buildup
-    if(particles.length > 500) particles = particles.slice(-250); // keep only recent ones
-    particles.forEach((p, i) => {
-        p.x+=p.vx; p.y+=p.vy; p.l-=0.03; ctx.globalAlpha=Math.max(0,p.l);
-        ctx.fillStyle="#00f2ff"; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,7); ctx.fill();
-        if(p.l<=0) particles.splice(i,1);
-    });
-    ctx.globalAlpha=1;
-    document.getElementById('remaining').textContent = balls.length;
-    // Periodic cleanup to prevent memory leaks on long streams
-    if(Math.random() < 0.01) {
-        try { window.speechSynthesis.cancel(); } catch(e) {}
-    }
-    requestAnimationFrame(loop);
-}
-
-/* === Start / Audio Autoplay logic (unchanged) === */
-document.getElementById("startBtn").onclick = () => {
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById("startOverlay").style.display = "none";
-        start();
-    } catch(e) { console.log(e); }
-};
-
-// Enhanced auto-start: try muted <audio> autoplay to prime media, connect it to AudioContext if possible,
-// and attach a one-time user-gesture resume if autoplay is blocked.
-(async function tryAutoStart(){
-    try {
-        // Create short muted audio and try to play it (muted autoplay usually allowed)
-        let mutedAudio = document.createElement('audio');
-        mutedAudio.muted = true; mutedAudio.autoplay = true; mutedAudio.playsInline = true;
-        // a tiny silent WAV (very short) to avoid external network requests
-        mutedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
-        document.body.appendChild(mutedAudio);
-        try { await mutedAudio.play(); } catch(e) { /* muted autoplay may still be blocked */ }
-
-        // Try to create and resume audio context
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        try {
-            const srcNode = audioCtx.createMediaElementSource(mutedAudio);
-            const g = audioCtx.createGain(); g.gain.value = 0;
-            srcNode.connect(g).connect(audioCtx.destination);
-        } catch(e) { /* ignore if creation fails due to cross-origin */ }
-
-        if (audioCtx.state === 'suspended') {
-            try { await audioCtx.resume(); } catch(e) {}
+        function playBubbleSound() {
+            if (!audioEnabled) return;
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 250 + Math.random() * 150;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.12);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.12);
+            } catch (e) {}
         }
 
-        if (audioCtx.state === 'running') {
-            document.getElementById("startOverlay").style.display = "none";
-            start();
-        } else {
-            // Autoplay blocked — show overlay and attach a one-time click handler to resume
-            console.log('Autoplay blocked; waiting for user gesture to start.');
-            const overlay = document.getElementById("startOverlay");
-            overlay.style.display = "flex";
-            overlay.querySelector('#startBtn').textContent = 'Tap to START';
-            const resumeHandler = async () => {
+        function playEliminationSound() {
+            if (!audioEnabled) return;
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+                oscillator.type = 'square';
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        function playWinSound() {
+            if (!audioEnabled) return;
+            try {
+                [0, 0.15, 0.3].forEach((delay, i) => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = [523.25, 659.25, 783.99][i];
+                    oscillator.type = 'sine';
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + delay);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + delay + 0.4);
+                    oscillator.start(audioContext.currentTime + delay);
+                    oscillator.stop(audioContext.currentTime + delay + 0.4);
+                });
+            } catch (e) {}
+        }
+
+        let musicInterval = null;
+        function playBackgroundMusic() {
+            if (!audioEnabled) return;
+            if (musicInterval) return;
+            
+            musicInterval = setInterval(() => {
                 try {
-                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    try { await audioCtx.resume(); } catch(e) {}
-                    document.getElementById("startOverlay").style.display = "none";
-                    start();
-                } catch(e) { console.log(e); }
-                document.body.removeEventListener('click', resumeHandler);
-            };
-            document.body.addEventListener('click', resumeHandler);
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    const notes = [261.63, 293.66, 329.63, 349.23, 392.00];
+                    oscillator.frequency.value = notes[Math.floor(Math.random() * notes.length)];
+                    oscillator.type = 'triangle';
+                    gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.6);
+                } catch (e) {}
+            }, 1000);
         }
-    } catch(e) {
-        audioCtx = null;
-    }
-})();
 
-requestAnimationFrame(loop);
-</script>
+        function emojiToCountryCode(emoji) {
+            const chars = Array.from(emoji || '');
+            if (chars.length < 2) return '';
+            const first = chars[0].codePointAt(0);
+            const second = chars[1].codePointAt(0);
+            if (!first || !second) return '';
+            const A = 127462; // Regional indicator A
+            const Z = 127487; // Regional indicator Z
+            if (first < A || first > Z || second < A || second > Z) return '';
+            return String.fromCharCode(first - 127397, second - 127397).toLowerCase();
+        }
+
+        function createFlagElement(country) {
+            const div = document.createElement('div');
+            div.style.width = '100%';
+            div.style.height = '100%';
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.fontSize = '28px';
+            div.style.fontFamily = "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif";
+
+            const code = emojiToCountryCode(country.emoji);
+            if (code) {
+                const img = document.createElement('img');
+                img.className = 'flagImg';
+                img.alt = country.name + ' flag';
+                img.src = `https://flagcdn.com/w80/${code}.png`;
+                img.onerror = () => {
+                    div.innerHTML = '';
+                    div.textContent = country.emoji;
+                };
+                div.appendChild(img);
+            } else {
+                div.textContent = country.emoji;
+            }
+
+            return div;
+        }
+
+        const ROUND_DURATION_MS = 13000;
+        const RESULT_DISPLAY_MS = 2500;
+        let gameCount = 0;
+        let recentWinners = [];
+        const topCountries = [countries[0], countries[1], countries[2]];
+        let roundAnimationId = null;
+        let nextRoundTimeoutId = null;
+
+        function updateTopCountries() {
+            document.getElementById('top1Container').innerHTML = '';
+            document.getElementById('top2Container').innerHTML = '';
+            document.getElementById('top3Container').innerHTML = '';
+            
+            document.getElementById('top1Container').appendChild(createFlagElement(topCountries[0]));
+            document.getElementById('top2Container').appendChild(createFlagElement(topCountries[1]));
+            document.getElementById('top3Container').appendChild(createFlagElement(topCountries[2]));
+        }
+
+        function updateRecentWinners() {
+            const container = document.getElementById('recentWinnersFlags');
+            container.innerHTML = '';
+            recentWinners.slice(-4).forEach(country => {
+                const div = document.createElement('div');
+                div.className = 'winnerFlagContainer';
+                div.appendChild(createFlagElement(country));
+                container.appendChild(div);
+            });
+        }
+
+        class Flag {
+            constructor(country, x, y, vx, vy) {
+                this.country = country;
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.element = document.createElement('div');
+                this.element.className = 'flagContainer';
+                this.element.appendChild(createFlagElement(country));
+                this.eliminated = false;
+                this.radius = 17.5;
+                this.isProtected = false;
+            }
+
+            update(centerX, centerY, maxRadius, otherFlags, eliminationAngle, speedFactor) {
+                if (this.eliminated) return false;
+
+                const baseSpeed = 2.5 * speedFactor;
+                
+                otherFlags.forEach(other => {
+                    if (other === this || other.eliminated) return;
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = this.radius + other.radius;
+                    
+                    if (dist < minDist && dist > 0) {
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        
+                        const pushX = nx * overlap * 0.5;
+                        const pushY = ny * overlap * 0.5;
+                        
+                        this.x -= pushX;
+                        this.y -= pushY;
+                        other.x += pushX;
+                        other.y += pushY;
+                        
+                        const rvx = other.vx - this.vx;
+                        const rvy = other.vy - this.vy;
+                        const dotProd = rvx * nx + rvy * ny;
+                        
+                        if (dotProd > 0) {
+                            const bounce = 0.8;
+                            this.vx += nx * dotProd * bounce;
+                            this.vy += ny * dotProd * bounce;
+                            other.vx -= nx * dotProd * bounce;
+                            other.vy -= ny * dotProd * bounce;
+                            
+                            if (Math.random() < 0.2) playBubbleSound();
+                        }
+                    }
+                });
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                const dx = this.x - centerX;
+                const dy = this.y - centerY;
+                const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distFromCenter + this.radius > maxRadius) {
+                    const angle = Math.atan2(dy, dx);
+                    this.x = centerX + Math.cos(angle) * (maxRadius - this.radius);
+                    this.y = centerY + Math.sin(angle) * (maxRadius - this.radius);
+                    
+                    const nx = dx / distFromCenter;
+                    const ny = dy / distFromCenter;
+                    const dotProd = this.vx * nx + this.vy * ny;
+                    this.vx -= 2 * dotProd * nx * 0.8;
+                    this.vy -= 2 * dotProd * ny * 0.8;
+                }
+
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > 0.1) {
+                    const targetSpeed = baseSpeed + Math.random() * 0.3;
+                    this.vx = (this.vx / speed) * targetSpeed;
+                    this.vy = (this.vy / speed) * targetSpeed;
+                }
+
+                if (!this.isProtected) {
+                    const angleToFlag = Math.atan2(dy, dx);
+                    const normalizedAngle = ((angleToFlag + Math.PI * 2) % (Math.PI * 2));
+                    const topAngle = eliminationAngle;
+                    let angleDiff = Math.abs(normalizedAngle - topAngle);
+                    if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+                    
+                    const gapAngle = 0.35;
+                    const eliminationDist = maxRadius - this.radius - 8;
+                    
+                    if (angleDiff < gapAngle && distFromCenter > eliminationDist) {
+                        return true;
+                    }
+                }
+
+                this.element.style.left = (this.x - this.radius) + 'px';
+                this.element.style.top = (this.y - this.radius * 0.7) + 'px';
+
+                return false;
+            }
+
+            eliminate() {
+                this.eliminated = true;
+                this.element.classList.add('eliminated');
+                playEliminationSound();
+            }
+        }
+
+        function startRoundLegacy() {
+            gameCount++;
+            const circle = document.getElementById('circle');
+            const timerEl = document.getElementById('timer');
+            const counterEl = document.getElementById('flagCount');
+            const resultEl = document.getElementById('result');
+            const eliminatedContainer = document.getElementById('eliminatedFlags');
+            
+            circle.innerHTML = '';
+            eliminatedContainer.innerHTML = '';
+            resultEl.classList.remove('show');
+            
+            const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
+            
+            const shuffled = [...countries].sort(() => Math.random() - 0.5);
+            let selectedCountries = indiaWins 
+                ? [countries.find(c => c.name === 'India'), ...shuffled.filter(c => c.name !== 'India')]
+                : shuffled;
+
+            const rect = circle.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const radius = rect.width / 2 - 15;
+
+            const flags = [];
+            selectedCountries.forEach((country, i) => {
+                const angle = (i / selectedCountries.length) * 2 * Math.PI;
+                const dist = Math.random() * (radius - 60) + 20;
+                const x = centerX + Math.cos(angle) * dist;
+                const y = centerY + Math.sin(angle) * dist;
+                
+                const speed = 2.5;
+                const randomAngle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(randomAngle) * speed;
+                const vy = Math.sin(randomAngle) * speed;
+                
+                const flag = new Flag(country, x, y, vx, vy);
+                
+                if (country.name === 'India' && indiaWins) {
+                    flag.isProtected = true;
+                }
+                
+                flags.push(flag);
+                circle.appendChild(flag.element);
+            });
+
+            counterEl.textContent = flags.length;
+
+            let timeLeft = 13;
+            let eliminationCooldown = 0;
+            timerEl.textContent = timeLeft;
+            
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) clearInterval(countdown);
+            }, 1000);
+
+            const animate = () => {
+                const activeFlags = flags.filter(f => !f.eliminated);
+                
+                if (activeFlags.length === 1 || (activeFlags.length === 0 && timeLeft <= 0)) {
+                    clearInterval(countdown);
+                    
+                    let winner;
+                    if (activeFlags.length === 1) {
+                        winner = activeFlags[0].country;
+                        activeFlags[0].element.classList.add('winner');
+                    } else {
+                        winner = flags[flags.length - 1].country;
+                    }
+                    
+                    if (indiaWins && winner.name !== 'India') {
+                        const indiaFlag = flags.find(f => f.country.name === 'India');
+                        if (indiaFlag) {
+                            winner = indiaFlag.country;
+                            indiaFlag.element.classList.add('winner');
+                        }
+                    }
+                    
+                    recentWinners.push(winner);
+                    updateRecentWinners();
+                    
+                    playWinSound();
+                    resultEl.innerHTML = winner.name === 'India' 
+                        ? '🎉 INDIA WINS! 🎉<br><span style="font-size:20px;">भारत जीत गया!</span>' 
+                        : `🏆 ${winner.name.toUpperCase()} WINS! 🏆`;
+                    resultEl.style.color = winner.name === 'India' ? '#FF9933' : '#00ff88';
+                    resultEl.classList.add('show');
+                    
+                    setTimeout(() => startRound(), 4000);
+                    return;
+                }
+
+                eliminationCooldown--;
+                
+                if (activeFlags.length > 1) {
+                    activeFlags.forEach(flag => {
+                        const shouldEliminate = flag.update(centerX, centerY, radius, activeFlags);
+                        if (shouldEliminate && eliminationCooldown <= 0) {
+                            flag.eliminate();
+                            eliminationCooldown = 20;
+                            
+                            setTimeout(() => {
+                                const div = document.createElement('div');
+                                div.className = 'eliminatedFlagContainer';
+                                div.appendChild(createFlagElement(flag.country));
+                                eliminatedContainer.appendChild(div);
+                            }, 1000);
+                        }
+                    });
+                } else {
+                    activeFlags.forEach(flag => {
+                        flag.update(centerX, centerY, radius, activeFlags);
+                    });
+                }
+
+                counterEl.textContent = activeFlags.length;
+                requestAnimationFrame(animate);
+            };
+
+            animate();
+        }
+
+        // Override with stable timed round loop (13s hard stop + smoother in-circle motion).
+        function startRound() {
+            if (roundAnimationId) {
+                cancelAnimationFrame(roundAnimationId);
+                roundAnimationId = null;
+            }
+            if (nextRoundTimeoutId) {
+                clearTimeout(nextRoundTimeoutId);
+                nextRoundTimeoutId = null;
+            }
+
+            gameCount++;
+            const circle = document.getElementById('circle');
+            const timerEl = document.getElementById('timer');
+            const counterEl = document.getElementById('flagCount');
+            const resultEl = document.getElementById('result');
+            const eliminatedContainer = document.getElementById('eliminatedFlags');
+
+            circle.innerHTML = '';
+            eliminatedContainer.innerHTML = '';
+            resultEl.classList.remove('show');
+
+            const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
+
+            const shuffled = [...countries].sort(() => Math.random() - 0.5);
+            const selectedCountries = indiaWins
+                ? [countries.find(c => c.name === 'India'), ...shuffled.filter(c => c.name !== 'India')]
+                : shuffled;
+
+            const rect = circle.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const radius = rect.width / 2 - 15;
+
+            const flags = [];
+            selectedCountries.forEach((country, i) => {
+                const angle = (i / selectedCountries.length) * 2 * Math.PI;
+                const dist = Math.random() * (radius - 60) + 20;
+                const x = centerX + Math.cos(angle) * dist;
+                const y = centerY + Math.sin(angle) * dist;
+
+                const speed = 2.5;
+                const randomAngle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(randomAngle) * speed;
+                const vy = Math.sin(randomAngle) * speed;
+
+                const flag = new Flag(country, x, y, vx, vy);
+                if (country.name === 'India' && indiaWins) flag.isProtected = true;
+
+                flags.push(flag);
+                circle.appendChild(flag.element);
+            });
+
+            counterEl.textContent = flags.length;
+            timerEl.textContent = Math.ceil(ROUND_DURATION_MS / 1000);
+
+            let eliminationCooldown = 0;
+            let roundEnded = false;
+            const roundStartTime = performance.now();
+
+            const finishRound = (activeFlags) => {
+                if (roundEnded) return;
+                roundEnded = true;
+
+                if (roundAnimationId) {
+                    cancelAnimationFrame(roundAnimationId);
+                    roundAnimationId = null;
+                }
+
+                let winner;
+                if (activeFlags.length === 1) {
+                    winner = activeFlags[0].country;
+                    activeFlags[0].element.classList.add('winner');
+                } else {
+                    const pool = activeFlags.length ? activeFlags : flags.filter(f => !f.eliminated);
+                    const pickPool = pool.length ? pool : flags;
+                    winner = pickPool[Math.floor(Math.random() * pickPool.length)].country;
+                }
+
+                if (indiaWins && winner.name !== 'India') {
+                    const indiaFlag = flags.find(f => f.country.name === 'India');
+                    if (indiaFlag) {
+                        winner = indiaFlag.country;
+                        indiaFlag.element.classList.add('winner');
+                    }
+                }
+
+                recentWinners.push(winner);
+                if (recentWinners.length > 20) recentWinners = recentWinners.slice(-20);
+                updateRecentWinners();
+
+                playWinSound();
+                resultEl.innerHTML = winner.name === 'India'
+                    ? 'INDIA WINS!<br><span style="font-size:20px;">Bharat Jeet Gaya!</span>'
+                    : `${winner.name.toUpperCase()} WINS!`;
+                resultEl.style.color = winner.name === 'India' ? '#FF9933' : '#00ff88';
+                resultEl.classList.add('show');
+
+                nextRoundTimeoutId = setTimeout(() => startRound(), RESULT_DISPLAY_MS);
+            };
+
+            const animate = () => {
+                if (roundEnded) return;
+
+                const activeFlags = flags.filter(f => !f.eliminated);
+                const elapsed = performance.now() - roundStartTime;
+                const roundProgress = Math.min(1, elapsed / ROUND_DURATION_MS);
+                const speedFactor = 1 + roundProgress * 1.35;
+                const eliminationAngle = (Math.PI * 1.5 + elapsed * 0.0012) % (Math.PI * 2);
+                timerEl.textContent = Math.max(0, Math.ceil((ROUND_DURATION_MS - elapsed) / 1000));
+
+                if (activeFlags.length <= 1 || elapsed >= ROUND_DURATION_MS) {
+                    finishRound(activeFlags);
+                    return;
+                }
+
+                eliminationCooldown = Math.max(0, eliminationCooldown - 1);
+
+                activeFlags.forEach(flag => {
+                    const shouldEliminate = flag.update(
+                        centerX,
+                        centerY,
+                        radius,
+                        activeFlags,
+                        eliminationAngle,
+                        speedFactor
+                    );
+
+                    if (shouldEliminate && eliminationCooldown === 0) {
+                        flag.eliminate();
+                        eliminationCooldown = 14;
+
+                        setTimeout(() => {
+                            const div = document.createElement('div');
+                            div.className = 'eliminatedFlagContainer';
+                            div.appendChild(createFlagElement(flag.country));
+                            eliminatedContainer.appendChild(div);
+                        }, 350);
+                    }
+                });
+
+                counterEl.textContent = flags.filter(f => !f.eliminated).length;
+                roundAnimationId = requestAnimationFrame(animate);
+            };
+
+            roundAnimationId = requestAnimationFrame(animate);
+        }
+
+        // Autoplay round loop; first user touch enables sound.
+        window.addEventListener('load', () => {
+            updateTopCountries();
+            document.getElementById('startOverlay').style.display = 'none';
+            setTimeout(() => startRound(), 250);
+        });
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            if (!audioEnabled) {
+                initAudio();
+                playBackgroundMusic();
+            }
+        });
+
+        document.addEventListener('pointerdown', () => {
+            if (!audioEnabled) {
+                initAudio();
+                playBackgroundMusic();
+            }
+        }, { once: true });
+    </script>
 </body>
 </html>
