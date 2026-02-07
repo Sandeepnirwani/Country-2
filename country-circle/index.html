@@ -539,6 +539,7 @@
 
         const ROUND_DURATION_MS = 13000;
         const RESULT_DISPLAY_MS = 2500;
+        const TARGET_FLAG_COUNT = 100;
         let gameCount = 0;
         let recentWinners = [];
         const topCountries = [countries[0], countries[1], countries[2]];
@@ -567,7 +568,7 @@
         }
 
         class Flag {
-            constructor(country, x, y, vx, vy) {
+            constructor(country, x, y, vx, vy, size) {
                 this.country = country;
                 this.x = x;
                 this.y = y;
@@ -575,9 +576,13 @@
                 this.vy = vy;
                 this.element = document.createElement('div');
                 this.element.className = 'flagContainer';
+                if (size) {
+                    this.element.style.width = `${size.width}px`;
+                    this.element.style.height = `${size.height}px`;
+                }
                 this.element.appendChild(createFlagElement(country));
                 this.eliminated = false;
-                this.radius = 17.5;
+                this.radius = size ? size.width / 2 : 17.5;
                 this.isProtected = false;
             }
 
@@ -692,9 +697,17 @@
             const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
             
             const shuffled = [...countries].sort(() => Math.random() - 0.5);
-            let selectedCountries = indiaWins 
+            let basePool = indiaWins
                 ? [countries.find(c => c.name === 'India'), ...shuffled.filter(c => c.name !== 'India')]
                 : shuffled;
+
+            const selectedCountries = [];
+            while (selectedCountries.length < TARGET_FLAG_COUNT) {
+                const needed = TARGET_FLAG_COUNT - selectedCountries.length;
+                selectedCountries.push(...basePool.slice(0, Math.min(needed, basePool.length)));
+                // reshuffle for variety when we need to repeat
+                basePool = basePool.sort(() => Math.random() - 0.5);
+            }
 
             const rect = circle.getBoundingClientRect();
             const centerX = rect.width / 2;
@@ -702,6 +715,9 @@
             const radius = rect.width / 2 - 15;
 
             const flags = [];
+            const flagWidth = Math.round(Math.max(28, Math.min(60, rect.width * 0.085)));
+            const flagHeight = Math.round(flagWidth * 0.72);
+            const flagSize = { width: flagWidth, height: flagHeight };
             selectedCountries.forEach((country, i) => {
                 const angle = (i / selectedCountries.length) * 2 * Math.PI;
                 const dist = Math.random() * (radius - 60) + 20;
@@ -713,7 +729,7 @@
                 const vx = Math.cos(randomAngle) * speed;
                 const vy = Math.sin(randomAngle) * speed;
                 
-                const flag = new Flag(country, x, y, vx, vy);
+                const flag = new Flag(country, x, y, vx, vy, flagSize);
                 
                 if (country.name === 'India' && indiaWins) {
                     flag.isProtected = true;
@@ -826,9 +842,17 @@
             const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
 
             const shuffled = [...countries].sort(() => Math.random() - 0.5);
-            const selectedCountries = indiaWins
+            let basePool = indiaWins
                 ? [countries.find(c => c.name === 'India'), ...shuffled.filter(c => c.name !== 'India')]
                 : shuffled;
+
+            const selectedCountries = [];
+            while (selectedCountries.length < TARGET_FLAG_COUNT) {
+                const needed = TARGET_FLAG_COUNT - selectedCountries.length;
+                selectedCountries.push(...basePool.slice(0, Math.min(needed, basePool.length)));
+                // reshuffle for variety when we need to repeat
+                basePool = basePool.sort(() => Math.random() - 0.5);
+            }
 
             const rect = circle.getBoundingClientRect();
             const centerX = rect.width / 2;
@@ -836,6 +860,9 @@
             const radius = rect.width / 2 - 15;
 
             const flags = [];
+            const flagWidth = Math.round(Math.max(28, Math.min(60, rect.width * 0.085)));
+            const flagHeight = Math.round(flagWidth * 0.72);
+            const flagSize = { width: flagWidth, height: flagHeight };
             selectedCountries.forEach((country, i) => {
                 const angle = (i / selectedCountries.length) * 2 * Math.PI;
                 const dist = Math.random() * (radius - 60) + 20;
@@ -847,7 +874,7 @@
                 const vx = Math.cos(randomAngle) * speed;
                 const vy = Math.sin(randomAngle) * speed;
 
-                const flag = new Flag(country, x, y, vx, vy);
+                const flag = new Flag(country, x, y, vx, vy, flagSize);
                 if (country.name === 'India' && indiaWins) flag.isProtected = true;
 
                 flags.push(flag);
