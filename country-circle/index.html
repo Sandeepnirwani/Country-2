@@ -694,7 +694,7 @@
             eliminatedContainer.innerHTML = '';
             resultEl.classList.remove('show');
             
-            const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
+            const indiaWins = (gameCount % 10 === 3 || gameCount % 10 === 6 || gameCount % 10 === 9);
             
             const shuffled = [...countries].sort(() => Math.random() - 0.5);
             let basePool = indiaWins
@@ -839,7 +839,7 @@
             eliminatedContainer.innerHTML = '';
             resultEl.classList.remove('show');
 
-            const indiaWins = (gameCount % 10 === 2 || gameCount % 10 === 4 || gameCount % 10 === 7 || gameCount % 10 === 0);
+            const indiaWins = (gameCount % 10 === 3 || gameCount % 10 === 6 || gameCount % 10 === 9);
 
             const shuffled = [...countries].sort(() => Math.random() - 0.5);
             let basePool = indiaWins
