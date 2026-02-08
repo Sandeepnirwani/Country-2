@@ -310,6 +310,28 @@
             margin-top: 20px;
             opacity: 0.8;
         }
+
+        #winnerInput {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 210px;
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            outline: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 260;
+        }
+
+        #winnerInput:focus {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -352,6 +374,7 @@
         <div id="redLine"></div>
         <div id="eliminatedArea"></div>
         <div id="eliminatedFlags"></div>
+        <input id="winnerInput" type="text" autocomplete="off" spellcheck="false" placeholder="Type country + Enter">
     </div>
 
     <script>
@@ -545,6 +568,7 @@
         const topCountries = [countries[0], countries[1], countries[2]];
         let roundAnimationId = null;
         let nextRoundTimeoutId = null;
+        let forcedWinnerName = null;
 
         function updateTopCountries() {
             document.getElementById('top1Container').innerHTML = '';
@@ -916,6 +940,15 @@
                     }
                 }
 
+                if (forcedWinnerName) {
+                    const forcedFlag = flags.find(f => f.country.name.toLowerCase() === forcedWinnerName.toLowerCase());
+                    if (forcedFlag) {
+                        winner = forcedFlag.country;
+                        forcedFlag.element.classList.add('winner');
+                    }
+                    forcedWinnerName = null;
+                }
+
                 recentWinners.push(winner);
                 if (recentWinners.length > 20) recentWinners = recentWinners.slice(-20);
                 updateRecentWinners();
@@ -1006,6 +1039,28 @@
             if (!audioEnabled) {
                 initAudio();
                 playBackgroundMusic();
+            }
+        });
+
+        const winnerInput = document.getElementById('winnerInput');
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && !e.repeat) {
+                e.preventDefault();
+                winnerInput.focus();
+            }
+        });
+
+        winnerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const raw = winnerInput.value.trim();
+                if (raw) {
+                    const match = countries.find(c => c.name.toLowerCase() === raw.toLowerCase());
+                    forcedWinnerName = match ? match.name : null;
+                } else {
+                    forcedWinnerName = null;
+                }
+                winnerInput.value = '';
+                winnerInput.blur();
             }
         });
 
